@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
+import { generateTimelinePhases } from "@/lib/timeline-generator";
 
 export default function CreateGoalPage() {
   const [goalTitle, setGoalTitle] = useState("Build ChronoForge MVP");
@@ -15,6 +16,7 @@ export default function CreateGoalPage() {
     daysUntilDeadline,
   });
 
+  const timelinePhases = generateTimelinePhases();
   const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
@@ -182,6 +184,57 @@ export default function CreateGoalPage() {
                 value={`${projection.scopeReductionNeeded}%`}
               />
             </div>
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+                Timeline Preview
+              </p>
+
+              <h2 className="mt-3 text-3xl font-semibold">
+                A first architecture of your goal.
+              </h2>
+            </div>
+
+            <p className="max-w-md text-sm leading-7 text-slate-400">
+              ChronoForge divides the goal into phases so your ambition becomes
+              easier to understand, sequence, and execute.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            {timelinePhases.map((phase, index) => (
+              <div
+                key={phase.title}
+                className="rounded-2xl border border-white/10 bg-black/20 p-5"
+              >
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                  Phase {index + 1}
+                </p>
+
+                <h3 className="mt-4 text-xl font-semibold">{phase.title}</h3>
+
+                <p className="mt-3 text-sm leading-6 text-slate-400">
+                  {phase.description}
+                </p>
+
+                <div className="mt-5">
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-white/70"
+                      style={{ width: `${phase.percentage}%` }}
+                    />
+                  </div>
+
+                  <p className="mt-2 text-xs text-slate-500">
+                    {phase.percentage}% of estimated effort
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
