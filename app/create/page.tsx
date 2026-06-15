@@ -24,6 +24,12 @@ export default function CreateGoalPage() {
 >
   ← Back to ChronoForge
 </a>
+        <a
+  href="/"
+  className="mb-8 inline-flex text-sm text-slate-400 transition hover:text-white"
+>
+  ← Back to ChronoForge
+</a>
         <p className="mb-4 text-sm uppercase tracking-[0.4em] text-slate-400">
           Goal Architect
         </p>
