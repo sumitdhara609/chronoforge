@@ -16,7 +16,7 @@ export default function CreateGoalPage() {
     daysUntilDeadline,
   });
 
-  const timelinePhases = generateTimelinePhases();
+  const timelinePhases = generateTimelinePhases(totalEstimatedHours);
   const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
@@ -230,7 +230,7 @@ export default function CreateGoalPage() {
                   </div>
 
                   <p className="mt-2 text-xs text-slate-500">
-                    {phase.percentage}% of estimated effort
+                    {phase.percentage}% of estimated effort · {phase.estimatedHours}h
                   </p>
                 </div>
               </div>
