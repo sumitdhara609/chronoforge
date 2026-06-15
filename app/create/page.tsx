@@ -19,17 +19,12 @@ export default function CreateGoalPage() {
     <main className="min-h-screen bg-[#050711] px-6 py-16 text-white">
       <section className="mx-auto max-w-6xl">
         <a
-  href="/"
-  className="mb-8 inline-flex text-sm text-slate-400 transition hover:text-white"
->
-  ← Back to ChronoForge
-</a>
-        <a
-  href="/"
-  className="mb-8 inline-flex text-sm text-slate-400 transition hover:text-white"
->
-  ← Back to ChronoForge
-</a>
+          href="/"
+          className="mb-8 inline-flex text-sm text-slate-400 transition hover:text-white"
+        >
+          ← Back to ChronoForge
+        </a>
+
         <p className="mb-4 text-sm uppercase tracking-[0.4em] text-slate-400">
           Goal Architect
         </p>
@@ -53,8 +48,12 @@ export default function CreateGoalPage() {
                 <input
                   value={goalTitle}
                   onChange={(event) => setGoalTitle(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                  placeholder="Example: Build ChronoForge MVP"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
                 />
+                <p className="mt-2 text-xs text-slate-500">
+                  Name the future you are trying to build.
+                </p>
               </label>
 
               <label className="block">
@@ -63,12 +62,17 @@ export default function CreateGoalPage() {
                 </span>
                 <input
                   type="number"
+                  min="1"
+                  step="1"
                   value={totalEstimatedHours}
                   onChange={(event) =>
                     setTotalEstimatedHours(Number(event.target.value))
                   }
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
                 />
+                <p className="mt-2 text-xs text-slate-500">
+                  Estimate the total focused hours needed to complete this goal.
+                </p>
               </label>
 
               <label className="block">
@@ -77,12 +81,18 @@ export default function CreateGoalPage() {
                 </span>
                 <input
                   type="number"
+                  min="1"
+                  step="1"
                   value={availableHoursPerWeek}
                   onChange={(event) =>
                     setAvailableHoursPerWeek(Number(event.target.value))
                   }
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
                 />
+                <p className="mt-2 text-xs text-slate-500">
+                  Be realistic. ChronoForge works best when your weekly capacity
+                  is honest.
+                </p>
               </label>
 
               <label className="block">
@@ -91,12 +101,18 @@ export default function CreateGoalPage() {
                 </span>
                 <input
                   type="number"
+                  min="1"
+                  step="1"
                   value={daysUntilDeadline}
                   onChange={(event) =>
                     setDaysUntilDeadline(Number(event.target.value))
                   }
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
                 />
+                <p className="mt-2 text-xs text-slate-500">
+                  Enter the number of days left before the goal must be
+                  completed.
+                </p>
               </label>
             </div>
           </div>
