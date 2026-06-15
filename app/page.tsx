@@ -49,22 +49,15 @@ export default function Home() {
         <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-slate-400">
           {demoProjection.recommendation}
         </p>
+
         <div className="mt-8 flex justify-center">
-  <a
-    href="/create"
-    className="rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-slate-200"
-  >
-    Forge My Timeline
-  </a>
-</div>
-        <div className="mt-8 flex justify-center">
-  <a
-    href="/create"
-    className="rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-slate-200"
-  >
-    Forge My Timeline
-  </a>
-</div>
+          <a
+            href="/create"
+            className="rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-slate-200"
+          >
+            Forge My Timeline
+          </a>
+        </div>
       </section>
     </main>
   );

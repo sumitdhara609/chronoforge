@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { calculateProjection } from "@/lib/chrono-engine";
+import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
 
 export default function CreateGoalPage() {
   const [goalTitle, setGoalTitle] = useState("Build ChronoForge MVP");
@@ -14,6 +14,8 @@ export default function CreateGoalPage() {
     availableHoursPerWeek,
     daysUntilDeadline,
   });
+
+  const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
     <main className="min-h-screen bg-[#050711] px-6 py-16 text-white">
@@ -118,21 +120,40 @@ export default function CreateGoalPage() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-              Projection
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+                  Projection
+                </p>
 
-            <h2 className="mt-4 text-3xl font-semibold">{goalTitle}</h2>
+                <h2 className="mt-4 text-3xl font-semibold">
+                  {displayGoalTitle}
+                </h2>
+              </div>
 
-            <div className="mt-8 space-y-4">
-              <ProjectionRow
-                label="Projected Completion"
-                value={`${projection.projectedDays} days`}
-              />
+              <RiskBadge value={projection.deadlineRisk} />
+            </div>
 
+            <div className="mt-8 rounded-3xl border border-white/10 bg-black/30 p-6">
+              <p className="text-sm text-slate-400">Projected Completion</p>
+
+              <div className="mt-3 flex items-end gap-2">
+                <span className="text-5xl font-semibold tracking-tight">
+                  {projection.projectedDays}
+                </span>
+                <span className="pb-2 text-slate-400">days</span>
+              </div>
+
+              <p className="mt-4 text-sm leading-7 text-slate-300">
+                {projection.recommendation}
+              </p>
+            </div>
+
+            <div className="mt-6 space-y-4">
               <ProjectionRow
                 label="Deadline Risk"
                 value={projection.deadlineRisk}
+                tone={projection.deadlineRisk}
               />
 
               <ProjectionRow
@@ -148,6 +169,7 @@ export default function CreateGoalPage() {
               <ProjectionRow
                 label="Burnout Risk"
                 value={projection.burnoutRisk}
+                tone={projection.burnoutRisk}
               />
 
               <ProjectionRow
@@ -160,12 +182,6 @@ export default function CreateGoalPage() {
                 value={`${projection.scopeReductionNeeded}%`}
               />
             </div>
-
-            <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5">
-              <p className="text-sm leading-7 text-slate-300">
-                {projection.recommendation}
-              </p>
-            </div>
           </div>
         </div>
       </section>
@@ -176,14 +192,51 @@ export default function CreateGoalPage() {
 function ProjectionRow({
   label,
   value,
+  tone,
 }: {
   label: string;
   value: string;
+  tone?: RiskLevel;
 }) {
+  const toneClass = getRiskToneClass(tone);
+
   return (
     <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
       <span className="text-sm text-slate-400">{label}</span>
-      <span className="font-semibold text-white">{value}</span>
+
+      <span
+        className={`rounded-full px-3 py-1 text-sm font-semibold ${toneClass}`}
+      >
+        {value}
+      </span>
     </div>
   );
+}
+
+function RiskBadge({ value }: { value: RiskLevel }) {
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${getRiskToneClass(
+        value
+      )}`}
+    >
+      {value}
+    </span>
+  );
+}
+
+function getRiskToneClass(tone?: RiskLevel) {
+  if (tone === "LOW") {
+    return "bg-emerald-500/10 text-emerald-300";
+  }
+
+  if (tone === "MEDIUM") {
+    return "bg-amber-500/10 text-amber-300";
+  }
+
+  if (tone === "HIGH") {
+    return "bg-rose-500/10 text-rose-300";
+  }
+
+  return "text-white";
 }
