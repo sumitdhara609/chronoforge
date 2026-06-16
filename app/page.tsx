@@ -1,18 +1,11 @@
+import { AuthNavigation } from "@/components/auth-navigation";
 import { BackgroundOrbs } from "@/components/background-orbs";
 import { HoverInsight } from "@/components/hover-insight";
 import { PremiumButton } from "@/components/premium-button";
 import { ProductIdentityStrip } from "@/components/product-identity-strip";
 import { SiteFooter } from "@/components/site-footer";
-import { calculateProjection } from "@/lib/chrono-engine";
-import { AuthNavigation } from "@/components/auth-navigation";
 
 export default function Home() {
-  const demoProjection = calculateProjection({
-    totalEstimatedHours: 120,
-    availableHoursPerWeek: 12,
-    daysUntilDeadline: 60,
-  });
-
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] text-white">
       <BackgroundOrbs />
@@ -46,27 +39,28 @@ export default function Home() {
         </p>
 
         <div className="mx-auto mt-12 grid w-full max-w-4xl gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur sm:p-6 md:grid-cols-3">
-          <MetricCard
-            label="Projected Completion"
-            value={`${demoProjection.projectedDays} days`}
-            insight="ChronoEngine estimates how many days your goal may take based on effort and available weekly time."
+          <HeroPreviewCard
+            label="Timeline Forecasting"
+            value="Plan before pressure"
+            insight="ChronoForge helps estimate how long a serious goal may take before the deadline starts becoming stressful."
           />
 
-          <MetricCard
-            label="Deadline Risk"
-            value={demoProjection.deadlineRisk}
-            insight="This risk level compares your available pace against the pace required to hit the deadline."
+          <HeroPreviewCard
+            label="Deadline Intelligence"
+            value="Detect risk early"
+            insight="Instead of discovering timeline failure too late, ChronoForge exposes deadline drift before execution begins."
           />
 
-          <MetricCard
-            label="Required Weekly Hours"
-            value={`${demoProjection.requiredWeeklyHours}h`}
-            insight="This shows how many hours per week are needed to complete the goal within the target deadline."
+          <HeroPreviewCard
+            label="Private Workspace"
+            value="Login to save"
+            insight="After signing in, users can save timelines securely and return to their private dashboard."
           />
         </div>
 
         <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-slate-400">
-          {demoProjection.recommendation}
+          Create a timeline to generate your own projection. No personal goal
+          data is shown here until you sign in and save it.
         </p>
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -226,7 +220,7 @@ export default function Home() {
   );
 }
 
-function MetricCard({
+function HeroPreviewCard({
   label,
   value,
   insight,
@@ -239,7 +233,7 @@ function MetricCard({
     <HoverInsight insight={insight}>
       <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
         <p className="text-sm text-slate-400">{label}</p>
-        <p className="mt-2 text-3xl font-semibold">{value}</p>
+        <p className="mt-2 text-2xl font-semibold">{value}</p>
       </div>
     </HoverInsight>
   );
