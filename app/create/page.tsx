@@ -14,14 +14,40 @@ export default function CreateGoalPage() {
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(60);
 
   const projection = calculateProjection({
-    totalEstimatedHours,
-    availableHoursPerWeek,
-    daysUntilDeadline,
-  });
+  totalEstimatedHours,
+  availableHoursPerWeek,
+  daysUntilDeadline,
+});
 
-  const timelinePhases = generateTimelinePhases(totalEstimatedHours);
-  const timelinePressure = analyzeTimelinePressure(timelinePhases);
-  const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
+const scenarios = [
+  {
+    title: "Current Pace",
+    description: "Your present weekly capacity.",
+    weeklyHours: availableHoursPerWeek,
+  },
+  {
+    title: "Focused Pace",
+    description: "A stronger but still realistic effort increase.",
+    weeklyHours: Math.round(availableHoursPerWeek * 1.25),
+  },
+  {
+    title: "Intense Pace",
+    description: "A high-pressure version of the same goal.",
+    weeklyHours: Math.round(availableHoursPerWeek * 1.5),
+  },
+].map((scenario) => ({
+  ...scenario,
+  projection: calculateProjection({
+    totalEstimatedHours,
+    availableHoursPerWeek: scenario.weeklyHours,
+    daysUntilDeadline,
+  }),
+}));
+
+const timelinePhases = generateTimelinePhases(totalEstimatedHours);
+const timelinePressure = analyzeTimelinePressure(timelinePhases);
+
+const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
     <main className="min-h-screen bg-[#050711] px-6 py-16 text-white">
@@ -260,6 +286,73 @@ export default function CreateGoalPage() {
                   <p className="mt-2 text-xs text-slate-500">
                     {phase.percentage}% of estimated effort · {phase.estimatedHours}h
                   </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+                <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+                Scenario Simulator
+              </p>
+
+              <h2 className="mt-3 text-3xl font-semibold">
+                Compare the futures your effort can create.
+              </h2>
+            </div>
+
+            <p className="max-w-md text-sm leading-7 text-slate-400">
+              ChronoForge tests alternate weekly-effort scenarios so you can see
+              how pace changes projected completion and deadline risk.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {scenarios.map((scenario) => (
+              <div
+                key={scenario.title}
+                className="rounded-2xl border border-white/10 bg-black/20 p-5"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                      {scenario.weeklyHours}h/week
+                    </p>
+
+                    <h3 className="mt-4 text-xl font-semibold">
+                      {scenario.title}
+                    </h3>
+                  </div>
+
+                  <RiskBadge value={scenario.projection.deadlineRisk} />
+                </div>
+
+                <p className="mt-3 text-sm leading-6 text-slate-400">
+                  {scenario.description}
+                </p>
+
+                <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <p className="text-sm text-slate-400">
+                    Projected Completion
+                  </p>
+
+                  <p className="mt-2 text-3xl font-semibold">
+                    {scenario.projection.projectedDays} days
+                  </p>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <ProjectionRow
+                    label="Required Weekly Hours"
+                    value={`${scenario.projection.requiredWeeklyHours}h`}
+                  />
+
+                  <ProjectionRow
+                    label="Drift"
+                    value={`${scenario.projection.driftPercentage}%`}
+                  />
                 </div>
               </div>
             ))}
