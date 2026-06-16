@@ -1,5 +1,6 @@
 import { calculateProjection } from "@/lib/chrono-engine";
 import { PremiumButton } from "@/components/premium-button";
+import { BackgroundOrbs } from "@/components/background-orbs";
 
 export default function Home() {
   const demoProjection = calculateProjection({
@@ -9,7 +10,8 @@ export default function Home() {
   });
 
   return (
-    <main className="min-h-screen bg-[#050711] text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#050711] text-white">
+  <BackgroundOrbs />
       <section className="mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-20">
         <p className="mb-4 text-center text-sm uppercase tracking-[0.4em] text-slate-400">
           ChronoForge

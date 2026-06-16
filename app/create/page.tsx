@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
+import { BackgroundOrbs } from "@/components/background-orbs";
 import {
   analyzeTimelinePressure,
   generateTimelinePhases,
@@ -49,7 +50,8 @@ export default function CreateGoalPage() {
   const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
-    <main className="min-h-screen bg-[#050711] px-6 py-16 text-white">
+    <main className="relative min-h-screen overflow-hidden bg-[#050711] px-6 py-16 text-white">
+  <BackgroundOrbs />
       <section className="mx-auto max-w-6xl">
         <a
           href="/"
