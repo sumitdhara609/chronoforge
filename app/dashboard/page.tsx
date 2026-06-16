@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AuthNavigation } from "@/components/auth-navigation";
 import { BackgroundOrbs } from "@/components/background-orbs";
+import { DeleteTimelineButton } from "@/components/delete-timeline-button";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection } from "@/lib/chrono-engine";
@@ -184,6 +185,17 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
       <p className="mt-5 text-sm leading-7 text-slate-400">
         {projection.recommendation}
       </p>
+
+      <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <a
+          href={`/create?timeline=${timeline.id}`}
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
+        >
+          Rebuild Plan
+        </a>
+
+        <DeleteTimelineButton timelineId={timeline.id} />
+      </div>
     </div>
   );
 }
