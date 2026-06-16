@@ -5,6 +5,8 @@ import { BackgroundOrbs } from "@/components/background-orbs";
 import { PremiumButton } from "@/components/premium-button";
 import { createClient } from "@/lib/supabase/client";
 
+const AUTH_TIMEOUT_MS = 12000;
+
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -15,10 +17,15 @@ export default function LoginPage() {
 
   async function handleAuth(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isLoading) {
+      return;
+    }
+
     setIsLoading(true);
     setStatus("");
 
-    const cleanEmail = email.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanEmail || !password) {
       setStatus("Please enter both email and password.");
@@ -32,39 +39,61 @@ export default function LoginPage() {
       return;
     }
 
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
 
-    const result =
-      mode === "login"
-        ? await supabase.auth.signInWithPassword({
-            email: cleanEmail,
-            password,
-          })
-        : await supabase.auth.signUp({
-            email: cleanEmail,
-            password,
-            options: {
-              emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-          });
+      const authPromise =
+        mode === "login"
+          ? supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password,
+            })
+          : supabase.auth.signUp({
+              email: cleanEmail,
+              password,
+              options: {
+                emailRedirectTo: `${window.location.origin}/auth/callback`,
+              },
+            });
 
-    if (result.error) {
-      setStatus(result.error.message);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        window.setTimeout(() => {
+          reject(
+            new Error(
+              "The authentication request took too long. Please check your Supabase settings and try again."
+            )
+          );
+        }, AUTH_TIMEOUT_MS);
+      });
+
+      const result = await Promise.race([authPromise, timeoutPromise]);
+
+      if (result.error) {
+        setStatus(result.error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (mode === "signup") {
+        setStatus(
+          "Account created. If email confirmation is enabled, check your inbox. Then log in."
+        );
+        setMode("login");
+        setPassword("");
+        setIsLoading(false);
+        return;
+      }
+
+      window.location.href = "/dashboard";
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.";
+
+      setStatus(message);
       setIsLoading(false);
-      return;
     }
-
-    if (mode === "signup") {
-      setStatus(
-        "Account created. Check your email if confirmation is required, then log in."
-      );
-      setMode("login");
-      setPassword("");
-      setIsLoading(false);
-      return;
-    }
-
-    window.location.href = "/dashboard";
   }
 
   return (
@@ -106,11 +135,13 @@ export default function LoginPage() {
             <div className="mb-6 flex rounded-full border border-white/10 bg-black/20 p-1">
               <button
                 type="button"
+                disabled={isLoading}
                 onClick={() => {
                   setMode("login");
                   setStatus("");
+                  setPassword("");
                 }}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                   mode === "login"
                     ? "bg-white text-black"
                     : "text-slate-400 hover:text-white"
@@ -121,11 +152,13 @@ export default function LoginPage() {
 
               <button
                 type="button"
+                disabled={isLoading}
                 onClick={() => {
                   setMode("signup");
                   setStatus("");
+                  setPassword("");
                 }}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                   mode === "signup"
                     ? "bg-white text-black"
                     : "text-slate-400 hover:text-white"
@@ -151,9 +184,10 @@ export default function LoginPage() {
                 <input
                   type="email"
                   value={email}
+                  disabled={isLoading}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400 disabled:cursor-not-allowed disabled:opacity-70"
                 />
               </label>
 
@@ -162,9 +196,10 @@ export default function LoginPage() {
                 <input
                   type="password"
                   value={password}
+                  disabled={isLoading}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Minimum 6 characters"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400 disabled:cursor-not-allowed disabled:opacity-70"
                 />
               </label>
 
@@ -180,7 +215,9 @@ export default function LoginPage() {
                 className="w-full rounded-full bg-white px-6 py-3 text-sm font-semibold text-black shadow-[0_0_40px_rgba(255,255,255,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-slate-200 hover:shadow-[0_0_60px_rgba(255,255,255,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isLoading
-                  ? "Please wait..."
+                  ? mode === "login"
+                    ? "Logging in..."
+                    : "Creating account..."
                   : mode === "login"
                   ? "Login to Dashboard"
                   : "Create Account"}
