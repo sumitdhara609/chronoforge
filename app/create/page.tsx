@@ -53,7 +53,7 @@ export default function CreateGoalPage() {
   const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-6 py-16 text-white">
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
       <BackgroundOrbs />
 
       <section className="relative z-10 mx-auto max-w-6xl">
@@ -67,16 +67,16 @@ export default function CreateGoalPage() {
           Goal Architect
         </p>
 
-        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight md:text-6xl">
+        <h1 className="max-w-4xl text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
           Forge a timeline from ambition.
         </h1>
 
-        <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+        <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
           Enter the shape of your goal. ChronoForge will calculate whether your
           current pace can realistically meet your deadline.
         </p>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_0.9fr]">
+        <div className="mt-10 grid gap-6 lg:mt-12 lg:grid-cols-[1fr_0.9fr] lg:gap-8">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <h2 className="text-2xl font-semibold">Goal Input</h2>
 
@@ -275,7 +275,7 @@ export default function CreateGoalPage() {
             </div>
           </HoverInsight>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {timelinePhases.map((phase, index) => (
               <HoverInsight
                 key={phase.title}
@@ -403,7 +403,7 @@ function ProjectionRow({
   const toneClass = getRiskToneClass(tone);
 
   const row = (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 transition duration-300 hover:border-white/20 hover:bg-black/30">
+    <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 transition duration-300 hover:border-white/20 hover:bg-black/30 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-slate-400">{label}</span>
 
       <span

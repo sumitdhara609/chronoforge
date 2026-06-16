@@ -2,12 +2,14 @@ type PremiumButtonProps = {
   href: string;
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "ghost";
+  fullWidth?: boolean;
 };
 
 export function PremiumButton({
   href,
   children,
   variant = "primary",
+  fullWidth = false,
 }: PremiumButtonProps) {
   const variantClass =
     variant === "primary"
@@ -16,13 +18,15 @@ export function PremiumButton({
       ? "border border-white/10 bg-white/10 text-white hover:border-white/20 hover:bg-white/15"
       : "text-slate-400 hover:text-white";
 
+  const widthClass = fullWidth ? "w-full justify-center sm:w-auto" : "";
+
   const baseClass =
     variant === "ghost"
       ? "group inline-flex items-center gap-2 text-sm font-medium transition duration-300"
-      : "group inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition duration-300 hover:-translate-y-0.5 active:translate-y-0";
+      : "group inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition duration-300 hover:-translate-y-0.5 active:translate-y-0";
 
   return (
-    <a href={href} className={`${baseClass} ${variantClass}`}>
+    <a href={href} className={`${baseClass} ${widthClass} ${variantClass}`}>
       <span>{children}</span>
       <span className="transition duration-300 group-hover:translate-x-1">
         →

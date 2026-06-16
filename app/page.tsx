@@ -15,16 +15,16 @@ export default function Home() {
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] text-white">
       <BackgroundOrbs />
 
-      <section className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-20">
+      <section className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-5 py-16 sm:px-6 sm:py-20">
         <p className="mb-4 text-center text-sm uppercase tracking-[0.4em] text-slate-400">
           ChronoForge
         </p>
 
-        <h1 className="mx-auto max-w-4xl text-center text-5xl font-semibold tracking-tight md:text-7xl">
+        <h1 className="mx-auto max-w-4xl text-center text-4xl font-semibold tracking-tight sm:text-5xl md:text-7xl">
           Turn Ambition Into Architecture.
         </h1>
 
-        <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-slate-300">
+        <p className="mx-auto mt-6 max-w-2xl text-center text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
           A future-simulation platform that transforms goals into timelines,
           milestone systems, deadline-risk analysis, and progress projections.
         </p>
@@ -54,8 +54,10 @@ export default function Home() {
         </p>
 
         <div className="mt-8 flex justify-center">
-          <PremiumButton href="/create">Forge My Timeline</PremiumButton>
-        </div>
+  <PremiumButton href="/create" fullWidth>
+    Forge My Timeline
+  </PremiumButton>
+</div>
       </section>
 
       <section className="relative z-10 mx-auto max-w-6xl px-6 pb-24">
@@ -143,10 +145,10 @@ export default function Home() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <PremiumButton href="/create" variant="secondary">
-            Open Goal Architect
-          </PremiumButton>
-        </div>
+  <PremiumButton href="/create" variant="secondary" fullWidth>
+    Open Goal Architect
+  </PremiumButton>
+</div>
       </section>
 
       <div className="relative z-10">
