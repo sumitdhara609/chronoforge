@@ -1,6 +1,7 @@
 import { BackgroundOrbs } from "@/components/background-orbs";
 import { HoverInsight } from "@/components/hover-insight";
 import { PremiumButton } from "@/components/premium-button";
+import { ProductIdentityStrip } from "@/components/product-identity-strip";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection } from "@/lib/chrono-engine";
 
@@ -25,11 +26,12 @@ export default function Home() {
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-center text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
-          A future-simulation platform that transforms goals into timelines,
-          milestone systems, deadline-risk analysis, and progress projections.
+          A future-simulation platform that helps people plan serious goals
+          with realistic timelines, deadline-risk analysis, effort allocation,
+          and scenario forecasting before time breaks the plan.
         </p>
 
-        <div className="mx-auto mt-12 grid w-full max-w-4xl gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur md:grid-cols-3">
+        <div className="mx-auto mt-12 grid w-full max-w-4xl gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur sm:p-6 md:grid-cols-3">
           <MetricCard
             label="Projected Completion"
             value={`${demoProjection.projectedDays} days`}
@@ -54,13 +56,57 @@ export default function Home() {
         </p>
 
         <div className="mt-8 flex justify-center">
-  <PremiumButton href="/create" fullWidth>
-    Forge My Timeline
-  </PremiumButton>
-</div>
+          <PremiumButton href="/create" fullWidth>
+            Forge My Timeline
+          </PremiumButton>
+        </div>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-6xl px-6 pb-24">
+      <div className="relative z-10 pb-16">
+        <ProductIdentityStrip />
+      </div>
+
+      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-24">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur md:p-8">
+          <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+            The Real Problem
+          </p>
+
+          <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
+            Most plans fail before the work even begins.
+          </h2>
+
+          <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-400">
+            People often underestimate scope, overestimate consistency, ignore
+            recovery time, and discover deadline pressure only when it is too
+            late. ChronoForge makes those risks visible early.
+          </p>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <RealityCard
+              title="Unclear Scope"
+              description="Goals feel simple until the hidden work becomes visible."
+            />
+
+            <RealityCard
+              title="Deadline Drift"
+              description="Small delays compound quietly until the original timeline collapses."
+            />
+
+            <RealityCard
+              title="Burnout Pressure"
+              description="Plans often demand more weekly effort than the user can sustain."
+            />
+
+            <RealityCard
+              title="No Scenario Thinking"
+              description="Most people never compare what happens at different effort levels."
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-24">
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur md:p-8">
           <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
             How It Works
@@ -96,7 +142,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-6xl px-6 pb-24">
+      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-24">
         <div className="grid gap-6 md:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur md:p-8">
             <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
@@ -116,7 +162,7 @@ export default function Home() {
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur md:p-8">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <EnginePoint
                 title="Future Drift"
                 value="Pace vs deadline"
@@ -145,10 +191,10 @@ export default function Home() {
         </div>
 
         <div className="mt-8 flex justify-center">
-  <PremiumButton href="/create" variant="secondary" fullWidth>
-    Open Goal Architect
-  </PremiumButton>
-</div>
+          <PremiumButton href="/create" variant="secondary" fullWidth>
+            Open Goal Architect
+          </PremiumButton>
+        </div>
       </section>
 
       <div className="relative z-10">
@@ -172,6 +218,23 @@ function MetricCard({
       <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
         <p className="text-sm text-slate-400">{label}</p>
         <p className="mt-2 text-3xl font-semibold">{value}</p>
+      </div>
+    </HoverInsight>
+  );
+}
+
+function RealityCard({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <HoverInsight insight="ChronoForge is designed to expose this planning risk before it becomes expensive.">
+      <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+        <h3 className="text-xl font-semibold">{title}</h3>
+        <p className="mt-3 text-sm leading-6 text-slate-400">{description}</p>
       </div>
     </HoverInsight>
   );

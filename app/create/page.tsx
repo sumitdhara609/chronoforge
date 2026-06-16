@@ -76,6 +76,21 @@ export default function CreateGoalPage() {
           current pace can realistically meet your deadline.
         </p>
 
+        <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
+            ChronoForge v0.2 Prototype
+          </p>
+
+          <h2 className="mt-3 max-w-3xl text-2xl font-semibold tracking-tight text-white">
+            Designed to prevent deadline drift before it becomes failure.
+          </h2>
+
+          <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-400">
+            This workspace helps you test whether your ambition, time, and
+            execution capacity are aligned before you commit to a plan.
+          </p>
+        </div>
+
         <div className="mt-10 grid gap-6 lg:mt-12 lg:grid-cols-[1fr_0.9fr] lg:gap-8">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <h2 className="text-2xl font-semibold">Goal Input</h2>
@@ -407,7 +422,7 @@ function ProjectionRow({
       <span className="text-sm text-slate-400">{label}</span>
 
       <span
-        className={`rounded-full px-3 py-1 text-sm font-semibold ${toneClass}`}
+        className={`w-fit rounded-full px-3 py-1 text-sm font-semibold ${toneClass}`}
       >
         {value}
       </span>
