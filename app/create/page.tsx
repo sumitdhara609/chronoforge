@@ -14,40 +14,39 @@ export default function CreateGoalPage() {
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(60);
 
   const projection = calculateProjection({
-  totalEstimatedHours,
-  availableHoursPerWeek,
-  daysUntilDeadline,
-});
-
-const scenarios = [
-  {
-    title: "Current Pace",
-    description: "Your present weekly capacity.",
-    weeklyHours: availableHoursPerWeek,
-  },
-  {
-    title: "Focused Pace",
-    description: "A stronger but still realistic effort increase.",
-    weeklyHours: Math.round(availableHoursPerWeek * 1.25),
-  },
-  {
-    title: "Intense Pace",
-    description: "A high-pressure version of the same goal.",
-    weeklyHours: Math.round(availableHoursPerWeek * 1.5),
-  },
-].map((scenario) => ({
-  ...scenario,
-  projection: calculateProjection({
     totalEstimatedHours,
-    availableHoursPerWeek: scenario.weeklyHours,
+    availableHoursPerWeek,
     daysUntilDeadline,
-  }),
-}));
+  });
 
-const timelinePhases = generateTimelinePhases(totalEstimatedHours);
-const timelinePressure = analyzeTimelinePressure(timelinePhases);
+  const scenarios = [
+    {
+      title: "Current Pace",
+      description: "Your present weekly capacity.",
+      weeklyHours: availableHoursPerWeek,
+    },
+    {
+      title: "Focused Pace",
+      description: "A stronger but still realistic effort increase.",
+      weeklyHours: Math.max(1, Math.round(availableHoursPerWeek * 1.25)),
+    },
+    {
+      title: "Intense Pace",
+      description: "A high-pressure version of the same goal.",
+      weeklyHours: Math.max(1, Math.round(availableHoursPerWeek * 1.5)),
+    },
+  ].map((scenario) => ({
+    ...scenario,
+    projection: calculateProjection({
+      totalEstimatedHours,
+      availableHoursPerWeek: scenario.weeklyHours,
+      daysUntilDeadline,
+    }),
+  }));
 
-const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
+  const timelinePhases = generateTimelinePhases(totalEstimatedHours);
+  const timelinePressure = analyzeTimelinePressure(timelinePhases);
+  const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
     <main className="min-h-screen bg-[#050711] px-6 py-16 text-white">
@@ -235,35 +234,37 @@ const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
             </p>
           </div>
 
-<div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5">
-  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-    Pressure Indicator
-  </p>
+          <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5">
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+              Pressure Indicator
+            </p>
 
-  <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-    <div>
-      <p className="text-sm text-slate-400">Highest Pressure Phase</p>
-      <h3 className="mt-2 text-3xl font-semibold">
-        {timelinePressure.highestPressurePhase.title}
-      </h3>
-    </div>
+            <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+              <div>
+                <p className="text-sm text-slate-400">
+                  Highest Pressure Phase
+                </p>
+                <h3 className="mt-2 text-3xl font-semibold">
+                  {timelinePressure.highestPressurePhase.title}
+                </h3>
+              </div>
 
-    <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
-      {timelinePressure.highestPressurePhase.estimatedHours}h ·{" "}
-      {timelinePressure.highestPressurePhase.percentage}%
-    </div>
-  </div>
+              <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
+                {timelinePressure.highestPressurePhase.estimatedHours}h ·{" "}
+                {timelinePressure.highestPressurePhase.percentage}%
+              </div>
+            </div>
 
-  <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
-    {timelinePressure.summary}
-  </p>
-</div>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
+              {timelinePressure.summary}
+            </p>
+          </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {timelinePhases.map((phase, index) => (
               <div
                 key={phase.title}
-                className="rounded-2xl border border-white/10 bg-black/20 p-5"
+                className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30"
               >
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
                   Phase {index + 1}
@@ -284,14 +285,16 @@ const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
                   </div>
 
                   <p className="mt-2 text-xs text-slate-500">
-                    {phase.percentage}% of estimated effort · {phase.estimatedHours}h
+                    {phase.percentage}% of estimated effort ·{" "}
+                    {phase.estimatedHours}h
                   </p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-                <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
@@ -313,7 +316,7 @@ const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
             {scenarios.map((scenario) => (
               <div
                 key={scenario.title}
-                className="rounded-2xl border border-white/10 bg-black/20 p-5"
+                className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>

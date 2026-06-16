@@ -1,4 +1,5 @@
 import { calculateProjection } from "@/lib/chrono-engine";
+import { PremiumButton } from "@/components/premium-button";
 
 export default function Home() {
   const demoProjection = calculateProjection({
@@ -42,12 +43,7 @@ export default function Home() {
         </p>
 
         <div className="mt-8 flex justify-center">
-          <a
-            href="/create"
-            className="rounded-full border border-white/10 bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-slate-200"
-          >
-            Forge My Timeline
-          </a>
+          <PremiumButton href="/create">Forge My Timeline</PremiumButton>
         </div>
       </section>
 
@@ -114,12 +110,9 @@ export default function Home() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <a
-            href="/create"
-            className="rounded-full border border-white/10 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
-          >
-            Open Goal Architect
-          </a>
+          <PremiumButton href="/create" variant="secondary">
+  Open Goal Architect
+</PremiumButton>
         </div>
       </section>
     </main>
