@@ -6,8 +6,6 @@ import { PremiumButton } from "@/components/premium-button";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const supabase = createClient();
-
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +31,8 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
+
+    const supabase = createClient();
 
     const result =
       mode === "login"
