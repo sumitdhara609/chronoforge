@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
 import { BackgroundOrbs } from "@/components/background-orbs";
+import { HoverInsight } from "@/components/hover-insight";
+import { PremiumButton } from "@/components/premium-button";
+import { SiteFooter } from "@/components/site-footer";
+import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
 import {
   analyzeTimelinePressure,
   generateTimelinePhases,
@@ -24,7 +27,7 @@ export default function CreateGoalPage() {
     {
       title: "Current Pace",
       description: "Your present weekly capacity.",
-      weeklyHours: availableHoursPerWeek,
+      weeklyHours: Math.max(1, availableHoursPerWeek),
     },
     {
       title: "Focused Pace",
@@ -50,15 +53,15 @@ export default function CreateGoalPage() {
   const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#050711] px-6 py-16 text-white">
-  <BackgroundOrbs />
-      <section className="mx-auto max-w-6xl">
-        <a
-          href="/"
-          className="mb-8 inline-flex text-sm text-slate-400 transition hover:text-white"
-        >
-          ← Back to ChronoForge
-        </a>
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-6 py-16 text-white">
+      <BackgroundOrbs />
+
+      <section className="relative z-10 mx-auto max-w-6xl">
+        <div className="mb-8">
+          <PremiumButton href="/" variant="ghost">
+            Back to ChronoForge
+          </PremiumButton>
+        </div>
 
         <p className="mb-4 text-sm uppercase tracking-[0.4em] text-slate-400">
           Goal Architect
@@ -167,52 +170,60 @@ export default function CreateGoalPage() {
               <RiskBadge value={projection.deadlineRisk} />
             </div>
 
-            <div className="mt-8 rounded-3xl border border-white/10 bg-black/30 p-6">
-              <p className="text-sm text-slate-400">Projected Completion</p>
+            <HoverInsight insight="This is the central ChronoEngine forecast: how long your goal may take at your current pace.">
+              <div className="mt-8 rounded-3xl border border-white/10 bg-black/30 p-6 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                <p className="text-sm text-slate-400">Projected Completion</p>
 
-              <div className="mt-3 flex items-end gap-2">
-                <span className="text-5xl font-semibold tracking-tight">
-                  {projection.projectedDays}
-                </span>
-                <span className="pb-2 text-slate-400">days</span>
+                <div className="mt-3 flex items-end gap-2">
+                  <span className="text-5xl font-semibold tracking-tight">
+                    {projection.projectedDays}
+                  </span>
+                  <span className="pb-2 text-slate-400">days</span>
+                </div>
+
+                <p className="mt-4 text-sm leading-7 text-slate-300">
+                  {projection.recommendation}
+                </p>
               </div>
-
-              <p className="mt-4 text-sm leading-7 text-slate-300">
-                {projection.recommendation}
-              </p>
-            </div>
+            </HoverInsight>
 
             <div className="mt-6 space-y-4">
               <ProjectionRow
                 label="Deadline Risk"
                 value={projection.deadlineRisk}
                 tone={projection.deadlineRisk}
+                insight="Deadline Risk compares your available weekly capacity with the weekly effort required to finish on time."
               />
 
               <ProjectionRow
                 label="Required Weekly Hours"
                 value={`${projection.requiredWeeklyHours}h`}
+                insight="This is the weekly effort needed to complete the goal within the selected deadline."
               />
 
               <ProjectionRow
                 label="Drift"
                 value={`${projection.driftPercentage}%`}
+                insight="Drift shows how far your projected timeline is moving away from the target deadline."
               />
 
               <ProjectionRow
                 label="Burnout Risk"
                 value={projection.burnoutRisk}
                 tone={projection.burnoutRisk}
+                insight="Burnout Risk estimates whether the required weekly effort may become too intense."
               />
 
               <ProjectionRow
                 label="Recovery Buffer"
                 value={`${projection.recoveryBufferDays} days`}
+                insight="Recovery Buffer shows how much margin the plan has before missed days begin damaging the timeline."
               />
 
               <ProjectionRow
                 label="Scope Reduction Needed"
                 value={`${projection.scopeReductionNeeded}%`}
+                insight="This estimates how much scope may need to be reduced if your current pace cannot meet the deadline."
               />
             </div>
           </div>
@@ -236,62 +247,66 @@ export default function CreateGoalPage() {
             </p>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-              Pressure Indicator
-            </p>
+          <HoverInsight insight="The Pressure Indicator identifies the heaviest phase in your timeline, where execution difficulty is most likely to concentrate.">
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+                Pressure Indicator
+              </p>
 
-            <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-              <div>
-                <p className="text-sm text-slate-400">
-                  Highest Pressure Phase
-                </p>
-                <h3 className="mt-2 text-3xl font-semibold">
-                  {timelinePressure.highestPressurePhase.title}
-                </h3>
+              <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                <div>
+                  <p className="text-sm text-slate-400">
+                    Highest Pressure Phase
+                  </p>
+                  <h3 className="mt-2 text-3xl font-semibold">
+                    {timelinePressure.highestPressurePhase.title}
+                  </h3>
+                </div>
+
+                <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
+                  {timelinePressure.highestPressurePhase.estimatedHours}h ·{" "}
+                  {timelinePressure.highestPressurePhase.percentage}%
+                </div>
               </div>
 
-              <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
-                {timelinePressure.highestPressurePhase.estimatedHours}h ·{" "}
-                {timelinePressure.highestPressurePhase.percentage}%
-              </div>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
+                {timelinePressure.summary}
+              </p>
             </div>
-
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
-              {timelinePressure.summary}
-            </p>
-          </div>
+          </HoverInsight>
 
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {timelinePhases.map((phase, index) => (
-              <div
+              <HoverInsight
                 key={phase.title}
-                className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30"
+                insight={`${phase.title} carries ${phase.estimatedHours}h of estimated effort in this timeline architecture.`}
               >
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  Phase {index + 1}
-                </p>
-
-                <h3 className="mt-4 text-xl font-semibold">{phase.title}</h3>
-
-                <p className="mt-3 text-sm leading-6 text-slate-400">
-                  {phase.description}
-                </p>
-
-                <div className="mt-5">
-                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-white/70"
-                      style={{ width: `${phase.percentage}%` }}
-                    />
-                  </div>
-
-                  <p className="mt-2 text-xs text-slate-500">
-                    {phase.percentage}% of estimated effort ·{" "}
-                    {phase.estimatedHours}h
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                    Phase {index + 1}
                   </p>
+
+                  <h3 className="mt-4 text-xl font-semibold">{phase.title}</h3>
+
+                  <p className="mt-3 text-sm leading-6 text-slate-400">
+                    {phase.description}
+                  </p>
+
+                  <div className="mt-5">
+                    <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-white/70"
+                        style={{ width: `${phase.percentage}%` }}
+                      />
+                    </div>
+
+                    <p className="mt-2 text-xs text-slate-500">
+                      {phase.percentage}% of estimated effort ·{" "}
+                      {phase.estimatedHours}h
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </HoverInsight>
             ))}
           </div>
         </div>
@@ -316,54 +331,60 @@ export default function CreateGoalPage() {
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {scenarios.map((scenario) => (
-              <div
+              <HoverInsight
                 key={scenario.title}
-                className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30"
+                insight={`${scenario.title} shows what happens if your weekly effort becomes ${scenario.weeklyHours} hours per week.`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                      {scenario.weeklyHours}h/week
-                    </p>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                        {scenario.weeklyHours}h/week
+                      </p>
 
-                    <h3 className="mt-4 text-xl font-semibold">
-                      {scenario.title}
-                    </h3>
+                      <h3 className="mt-4 text-xl font-semibold">
+                        {scenario.title}
+                      </h3>
+                    </div>
+
+                    <RiskBadge value={scenario.projection.deadlineRisk} />
                   </div>
 
-                  <RiskBadge value={scenario.projection.deadlineRisk} />
-                </div>
-
-                <p className="mt-3 text-sm leading-6 text-slate-400">
-                  {scenario.description}
-                </p>
-
-                <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
-                  <p className="text-sm text-slate-400">
-                    Projected Completion
+                  <p className="mt-3 text-sm leading-6 text-slate-400">
+                    {scenario.description}
                   </p>
 
-                  <p className="mt-2 text-3xl font-semibold">
-                    {scenario.projection.projectedDays} days
-                  </p>
-                </div>
+                  <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
+                    <p className="text-sm text-slate-400">
+                      Projected Completion
+                    </p>
 
-                <div className="mt-4 space-y-3">
-                  <ProjectionRow
-                    label="Required Weekly Hours"
-                    value={`${scenario.projection.requiredWeeklyHours}h`}
-                  />
+                    <p className="mt-2 text-3xl font-semibold">
+                      {scenario.projection.projectedDays} days
+                    </p>
+                  </div>
 
-                  <ProjectionRow
-                    label="Drift"
-                    value={`${scenario.projection.driftPercentage}%`}
-                  />
+                  <div className="mt-4 space-y-3">
+                    <ProjectionRow
+                      label="Required Weekly Hours"
+                      value={`${scenario.projection.requiredWeeklyHours}h`}
+                    />
+
+                    <ProjectionRow
+                      label="Drift"
+                      value={`${scenario.projection.driftPercentage}%`}
+                    />
+                  </div>
                 </div>
-              </div>
+              </HoverInsight>
             ))}
           </div>
         </div>
       </section>
+
+      <div className="relative z-10">
+        <SiteFooter />
+      </div>
     </main>
   );
 }
@@ -372,15 +393,17 @@ function ProjectionRow({
   label,
   value,
   tone,
+  insight,
 }: {
   label: string;
   value: string;
   tone?: RiskLevel;
+  insight?: string;
 }) {
   const toneClass = getRiskToneClass(tone);
 
-  return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+  const row = (
+    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 transition duration-300 hover:border-white/20 hover:bg-black/30">
       <span className="text-sm text-slate-400">{label}</span>
 
       <span
@@ -390,6 +413,12 @@ function ProjectionRow({
       </span>
     </div>
   );
+
+  if (!insight) {
+    return row;
+  }
+
+  return <HoverInsight insight={insight}>{row}</HoverInsight>;
 }
 
 function RiskBadge({ value }: { value: RiskLevel }) {
