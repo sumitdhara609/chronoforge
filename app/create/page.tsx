@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BackgroundOrbs } from "@/components/background-orbs";
 import { HoverInsight } from "@/components/hover-insight";
 import { PremiumButton } from "@/components/premium-button";
+import { SaveTimelineButton } from "@/components/save-timeline-button";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
 import {
@@ -12,45 +13,58 @@ import {
 } from "@/lib/timeline-generator";
 
 export default function CreateGoalPage() {
-  const [goalTitle, setGoalTitle] = useState("Build ChronoForge MVP");
-  const [totalEstimatedHours, setTotalEstimatedHours] = useState(120);
-  const [availableHoursPerWeek, setAvailableHoursPerWeek] = useState(12);
-  const [daysUntilDeadline, setDaysUntilDeadline] = useState(60);
+  const [goalTitle, setGoalTitle] = useState("");
+  const [totalEstimatedHours, setTotalEstimatedHours] = useState("");
+  const [availableHoursPerWeek, setAvailableHoursPerWeek] = useState("");
+  const [daysUntilDeadline, setDaysUntilDeadline] = useState("");
+
+  const safeTotalEstimatedHours = toPositiveNumber(totalEstimatedHours);
+  const safeAvailableHoursPerWeek = toPositiveNumber(availableHoursPerWeek);
+  const safeDaysUntilDeadline = toPositiveNumber(daysUntilDeadline);
 
   const projection = calculateProjection({
-    totalEstimatedHours,
-    availableHoursPerWeek,
-    daysUntilDeadline,
+    totalEstimatedHours: safeTotalEstimatedHours,
+    availableHoursPerWeek: safeAvailableHoursPerWeek,
+    daysUntilDeadline: safeDaysUntilDeadline,
   });
 
   const scenarios = [
     {
       title: "Current Pace",
       description: "Your present weekly capacity.",
-      weeklyHours: Math.max(1, availableHoursPerWeek),
+      weeklyHours: safeAvailableHoursPerWeek,
     },
     {
       title: "Focused Pace",
       description: "A stronger but still realistic effort increase.",
-      weeklyHours: Math.max(1, Math.round(availableHoursPerWeek * 1.25)),
+      weeklyHours: Math.max(
+        1,
+        Math.round(safeAvailableHoursPerWeek * 1.25)
+      ),
     },
     {
       title: "Intense Pace",
       description: "A high-pressure version of the same goal.",
-      weeklyHours: Math.max(1, Math.round(availableHoursPerWeek * 1.5)),
+      weeklyHours: Math.max(1, Math.round(safeAvailableHoursPerWeek * 1.5)),
     },
   ].map((scenario) => ({
     ...scenario,
     projection: calculateProjection({
-      totalEstimatedHours,
+      totalEstimatedHours: safeTotalEstimatedHours,
       availableHoursPerWeek: scenario.weeklyHours,
-      daysUntilDeadline,
+      daysUntilDeadline: safeDaysUntilDeadline,
     }),
   }));
 
-  const timelinePhases = generateTimelinePhases(totalEstimatedHours);
+  const timelinePhases = generateTimelinePhases(safeTotalEstimatedHours);
   const timelinePressure = analyzeTimelinePressure(timelinePhases);
   const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
+
+  const hasUserInput =
+    goalTitle.trim().length > 0 ||
+    totalEstimatedHours.trim().length > 0 ||
+    availableHoursPerWeek.trim().length > 0 ||
+    daysUntilDeadline.trim().length > 0;
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
@@ -101,7 +115,7 @@ export default function CreateGoalPage() {
                 <input
                   value={goalTitle}
                   onChange={(event) => setGoalTitle(event.target.value)}
-                  placeholder="Example: Build ChronoForge MVP"
+                  placeholder="Example: Build my portfolio website"
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
                 />
                 <p className="mt-2 text-xs text-slate-500">
@@ -119,9 +133,10 @@ export default function CreateGoalPage() {
                   step="1"
                   value={totalEstimatedHours}
                   onChange={(event) =>
-                    setTotalEstimatedHours(Number(event.target.value))
+                    setTotalEstimatedHours(event.target.value)
                   }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                  placeholder="Example: 120"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
                 />
                 <p className="mt-2 text-xs text-slate-500">
                   Estimate the total focused hours needed to complete this goal.
@@ -138,9 +153,10 @@ export default function CreateGoalPage() {
                   step="1"
                   value={availableHoursPerWeek}
                   onChange={(event) =>
-                    setAvailableHoursPerWeek(Number(event.target.value))
+                    setAvailableHoursPerWeek(event.target.value)
                   }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                  placeholder="Example: 12"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
                 />
                 <p className="mt-2 text-xs text-slate-500">
                   Be realistic. ChronoForge works best when your weekly capacity
@@ -158,9 +174,10 @@ export default function CreateGoalPage() {
                   step="1"
                   value={daysUntilDeadline}
                   onChange={(event) =>
-                    setDaysUntilDeadline(Number(event.target.value))
+                    setDaysUntilDeadline(event.target.value)
                   }
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+                  placeholder="Example: 60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
                 />
                 <p className="mt-2 text-xs text-slate-500">
                   Enter the number of days left before the goal must be
@@ -185,62 +202,91 @@ export default function CreateGoalPage() {
               <RiskBadge value={projection.deadlineRisk} />
             </div>
 
-            <HoverInsight insight="This is the central ChronoEngine forecast: how long your goal may take at your current pace.">
-              <div className="mt-8 rounded-3xl border border-white/10 bg-black/30 p-6 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
-                <p className="text-sm text-slate-400">Projected Completion</p>
+            {!hasUserInput ? (
+              <div className="mt-8 rounded-3xl border border-white/10 bg-black/30 p-6">
+                <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+                  Waiting for Input
+                </p>
 
-                <div className="mt-3 flex items-end gap-2">
-                  <span className="text-5xl font-semibold tracking-tight">
-                    {projection.projectedDays}
-                  </span>
-                  <span className="pb-2 text-slate-400">days</span>
-                </div>
+                <h3 className="mt-4 text-3xl font-semibold">
+                  Start by entering your goal.
+                </h3>
 
-                <p className="mt-4 text-sm leading-7 text-slate-300">
-                  {projection.recommendation}
+                <p className="mt-4 text-sm leading-7 text-slate-400">
+                  Once you enter your estimated effort, weekly capacity, and
+                  deadline, ChronoForge will generate a realistic timeline
+                  projection.
                 </p>
               </div>
-            </HoverInsight>
+            ) : (
+              <>
+                <HoverInsight insight="This is the central ChronoEngine forecast: how long your goal may take at your current pace.">
+                  <div className="mt-8 rounded-3xl border border-white/10 bg-black/30 p-6 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                    <p className="text-sm text-slate-400">
+                      Projected Completion
+                    </p>
 
-            <div className="mt-6 space-y-4">
-              <ProjectionRow
-                label="Deadline Risk"
-                value={projection.deadlineRisk}
-                tone={projection.deadlineRisk}
-                insight="Deadline Risk compares your available weekly capacity with the weekly effort required to finish on time."
-              />
+                    <div className="mt-3 flex items-end gap-2">
+                      <span className="text-5xl font-semibold tracking-tight">
+                        {projection.projectedDays}
+                      </span>
+                      <span className="pb-2 text-slate-400">days</span>
+                    </div>
 
-              <ProjectionRow
-                label="Required Weekly Hours"
-                value={`${projection.requiredWeeklyHours}h`}
-                insight="This is the weekly effort needed to complete the goal within the selected deadline."
-              />
+                    <p className="mt-4 text-sm leading-7 text-slate-300">
+                      {projection.recommendation}
+                    </p>
+                  </div>
+                </HoverInsight>
 
-              <ProjectionRow
-                label="Drift"
-                value={`${projection.driftPercentage}%`}
-                insight="Drift shows how far your projected timeline is moving away from the target deadline."
-              />
+                <div className="mt-6 space-y-4">
+                  <ProjectionRow
+                    label="Deadline Risk"
+                    value={projection.deadlineRisk}
+                    tone={projection.deadlineRisk}
+                    insight="Deadline Risk compares your available weekly capacity with the weekly effort required to finish on time."
+                  />
 
-              <ProjectionRow
-                label="Burnout Risk"
-                value={projection.burnoutRisk}
-                tone={projection.burnoutRisk}
-                insight="Burnout Risk estimates whether the required weekly effort may become too intense."
-              />
+                  <ProjectionRow
+                    label="Required Weekly Hours"
+                    value={`${projection.requiredWeeklyHours}h`}
+                    insight="This is the weekly effort needed to complete the goal within the selected deadline."
+                  />
 
-              <ProjectionRow
-                label="Recovery Buffer"
-                value={`${projection.recoveryBufferDays} days`}
-                insight="Recovery Buffer shows how much margin the plan has before missed days begin damaging the timeline."
-              />
+                  <ProjectionRow
+                    label="Drift"
+                    value={`${projection.driftPercentage}%`}
+                    insight="Drift shows how far your projected timeline is moving away from the target deadline."
+                  />
 
-              <ProjectionRow
-                label="Scope Reduction Needed"
-                value={`${projection.scopeReductionNeeded}%`}
-                insight="This estimates how much scope may need to be reduced if your current pace cannot meet the deadline."
-              />
-            </div>
+                  <ProjectionRow
+                    label="Burnout Risk"
+                    value={projection.burnoutRisk}
+                    tone={projection.burnoutRisk}
+                    insight="Burnout Risk estimates whether the required weekly effort may become too intense."
+                  />
+
+                  <ProjectionRow
+                    label="Recovery Buffer"
+                    value={`${projection.recoveryBufferDays} days`}
+                    insight="Recovery Buffer shows how much margin the plan has before missed days begin damaging the timeline."
+                  />
+
+                  <ProjectionRow
+                    label="Scope Reduction Needed"
+                    value={`${projection.scopeReductionNeeded}%`}
+                    insight="This estimates how much scope may need to be reduced if your current pace cannot meet the deadline."
+                  />
+                </div>
+
+                <SaveTimelineButton
+                  goalTitle={displayGoalTitle}
+                  totalEstimatedHours={safeTotalEstimatedHours}
+                  availableHoursPerWeek={safeAvailableHoursPerWeek}
+                  daysUntilDeadline={safeDaysUntilDeadline}
+                />
+              </>
+            )}
           </div>
         </div>
 
@@ -262,68 +308,81 @@ export default function CreateGoalPage() {
             </p>
           </div>
 
-          <HoverInsight insight="The Pressure Indicator identifies the heaviest phase in your timeline, where execution difficulty is most likely to concentrate.">
-            <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
-              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-                Pressure Indicator
-              </p>
-
-              <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-                <div>
-                  <p className="text-sm text-slate-400">
-                    Highest Pressure Phase
-                  </p>
-                  <h3 className="mt-2 text-3xl font-semibold">
-                    {timelinePressure.highestPressurePhase.title}
-                  </h3>
-                </div>
-
-                <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
-                  {timelinePressure.highestPressurePhase.estimatedHours}h ·{" "}
-                  {timelinePressure.highestPressurePhase.percentage}%
-                </div>
-              </div>
-
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
-                {timelinePressure.summary}
+          {!hasUserInput ? (
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+              <p className="text-sm leading-7 text-slate-400">
+                Timeline phases will appear here after you enter your goal
+                details.
               </p>
             </div>
-          </HoverInsight>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {timelinePhases.map((phase, index) => (
-              <HoverInsight
-                key={phase.title}
-                insight={`${phase.title} carries ${phase.estimatedHours}h of estimated effort in this timeline architecture.`}
-              >
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                    Phase {index + 1}
+          ) : (
+            <>
+              <HoverInsight insight="The Pressure Indicator identifies the heaviest phase in your timeline, where execution difficulty is most likely to concentrate.">
+                <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+                    Pressure Indicator
                   </p>
 
-                  <h3 className="mt-4 text-xl font-semibold">{phase.title}</h3>
-
-                  <p className="mt-3 text-sm leading-6 text-slate-400">
-                    {phase.description}
-                  </p>
-
-                  <div className="mt-5">
-                    <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full bg-white/70"
-                        style={{ width: `${phase.percentage}%` }}
-                      />
+                  <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                    <div>
+                      <p className="text-sm text-slate-400">
+                        Highest Pressure Phase
+                      </p>
+                      <h3 className="mt-2 text-3xl font-semibold">
+                        {timelinePressure.highestPressurePhase.title}
+                      </h3>
                     </div>
 
-                    <p className="mt-2 text-xs text-slate-500">
-                      {phase.percentage}% of estimated effort ·{" "}
-                      {phase.estimatedHours}h
-                    </p>
+                    <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
+                      {timelinePressure.highestPressurePhase.estimatedHours}h ·{" "}
+                      {timelinePressure.highestPressurePhase.percentage}%
+                    </div>
                   </div>
+
+                  <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
+                    {timelinePressure.summary}
+                  </p>
                 </div>
               </HoverInsight>
-            ))}
-          </div>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {timelinePhases.map((phase, index) => (
+                  <HoverInsight
+                    key={phase.title}
+                    insight={`${phase.title} carries ${phase.estimatedHours}h of estimated effort in this timeline architecture.`}
+                  >
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                        Phase {index + 1}
+                      </p>
+
+                      <h3 className="mt-4 text-xl font-semibold">
+                        {phase.title}
+                      </h3>
+
+                      <p className="mt-3 text-sm leading-6 text-slate-400">
+                        {phase.description}
+                      </p>
+
+                      <div className="mt-5">
+                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className="h-full rounded-full bg-white/70"
+                            style={{ width: `${phase.percentage}%` }}
+                          />
+                        </div>
+
+                        <p className="mt-2 text-xs text-slate-500">
+                          {phase.percentage}% of estimated effort ·{" "}
+                          {phase.estimatedHours}h
+                        </p>
+                      </div>
+                    </div>
+                  </HoverInsight>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
@@ -344,56 +403,65 @@ export default function CreateGoalPage() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {scenarios.map((scenario) => (
-              <HoverInsight
-                key={scenario.title}
-                insight={`${scenario.title} shows what happens if your weekly effort becomes ${scenario.weeklyHours} hours per week.`}
-              >
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                        {scenario.weeklyHours}h/week
-                      </p>
+          {!hasUserInput ? (
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5">
+              <p className="text-sm leading-7 text-slate-400">
+                Scenario comparisons will activate after you enter your timeline
+                inputs.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {scenarios.map((scenario) => (
+                <HoverInsight
+                  key={scenario.title}
+                  insight={`${scenario.title} shows what happens if your weekly effort becomes ${scenario.weeklyHours} hours per week.`}
+                >
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                          {scenario.weeklyHours}h/week
+                        </p>
 
-                      <h3 className="mt-4 text-xl font-semibold">
-                        {scenario.title}
-                      </h3>
+                        <h3 className="mt-4 text-xl font-semibold">
+                          {scenario.title}
+                        </h3>
+                      </div>
+
+                      <RiskBadge value={scenario.projection.deadlineRisk} />
                     </div>
 
-                    <RiskBadge value={scenario.projection.deadlineRisk} />
-                  </div>
-
-                  <p className="mt-3 text-sm leading-6 text-slate-400">
-                    {scenario.description}
-                  </p>
-
-                  <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
-                    <p className="text-sm text-slate-400">
-                      Projected Completion
+                    <p className="mt-3 text-sm leading-6 text-slate-400">
+                      {scenario.description}
                     </p>
 
-                    <p className="mt-2 text-3xl font-semibold">
-                      {scenario.projection.projectedDays} days
-                    </p>
-                  </div>
+                    <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-4">
+                      <p className="text-sm text-slate-400">
+                        Projected Completion
+                      </p>
 
-                  <div className="mt-4 space-y-3">
-                    <ProjectionRow
-                      label="Required Weekly Hours"
-                      value={`${scenario.projection.requiredWeeklyHours}h`}
-                    />
+                      <p className="mt-2 text-3xl font-semibold">
+                        {scenario.projection.projectedDays} days
+                      </p>
+                    </div>
 
-                    <ProjectionRow
-                      label="Drift"
-                      value={`${scenario.projection.driftPercentage}%`}
-                    />
+                    <div className="mt-4 space-y-3">
+                      <ProjectionRow
+                        label="Required Weekly Hours"
+                        value={`${scenario.projection.requiredWeeklyHours}h`}
+                      />
+
+                      <ProjectionRow
+                        label="Drift"
+                        value={`${scenario.projection.driftPercentage}%`}
+                      />
+                    </div>
                   </div>
-                </div>
-              </HoverInsight>
-            ))}
-          </div>
+                </HoverInsight>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -462,4 +530,14 @@ function getRiskToneClass(tone?: RiskLevel) {
   }
 
   return "text-white";
+}
+
+function toPositiveNumber(value: string) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number) || number <= 0) {
+    return 1;
+  }
+
+  return number;
 }

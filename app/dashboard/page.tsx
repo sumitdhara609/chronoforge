@@ -3,6 +3,16 @@ import { BackgroundOrbs } from "@/components/background-orbs";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
 import { createClient } from "@/lib/supabase/server";
+import { calculateProjection } from "@/lib/chrono-engine";
+
+type Timeline = {
+  id: string;
+  goal_title: string;
+  total_estimated_hours: number;
+  available_hours_per_week: number;
+  days_until_deadline: number;
+  created_at: string;
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -14,6 +24,15 @@ export default async function DashboardPage() {
   if (!user) {
     redirect("/login");
   }
+
+  const { data: timelines, error } = await supabase
+    .from("timelines")
+    .select(
+      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at"
+    )
+    .order("created_at", { ascending: false });
+
+  const savedTimelines = (timelines ?? []) as Timeline[];
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
@@ -40,41 +59,53 @@ export default async function DashboardPage() {
 
         <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
           You are logged in as{" "}
-          <span className="font-medium text-white">{user.email}</span>. This
-          workspace will store your saved timelines securely.
+          <span className="font-medium text-white">{user.email}</span>. Your
+          saved timelines are stored securely with your account.
         </p>
 
         <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-            Timeline Vault
-          </p>
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+                Timeline Vault
+              </p>
 
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight">
-            Saved timelines will appear here.
-          </h2>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight">
+                Saved goal architectures.
+              </h2>
+            </div>
 
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
-            In the next step, we will create a secure database table and connect
-            the Goal Architect to this dashboard so each logged-in user can save
-            and revisit their own plans.
-          </p>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <VaultCard
-              title="Private by Design"
-              description="Each saved timeline will belong to the authenticated user."
-            />
-
-            <VaultCard
-              title="Database-backed"
-              description="Plans will be stored in Supabase Postgres instead of only existing in the browser."
-            />
-
-            <VaultCard
-              title="Ready for Scaling"
-              description="This foundation can later support editing, deleting, sharing, and analytics."
-            />
+            <div className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
+              {savedTimelines.length} saved
+            </div>
           </div>
+
+          {error ? (
+            <div className="mt-8 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5 text-sm leading-7 text-rose-200">
+              {error.message}
+            </div>
+          ) : savedTimelines.length === 0 ? (
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-6">
+              <h3 className="text-2xl font-semibold">
+                No timelines saved yet.
+              </h3>
+
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+                Create your first goal architecture, save it securely, and it
+                will appear here inside your private timeline vault.
+              </p>
+
+              <div className="mt-6">
+                <PremiumButton href="/create">Create First Timeline</PremiumButton>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {savedTimelines.map((timeline) => (
+                <TimelineCard key={timeline.id} timeline={timeline} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -85,17 +116,56 @@ export default async function DashboardPage() {
   );
 }
 
-function VaultCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function TimelineCard({ timeline }: { timeline: Timeline }) {
+  const projection = calculateProjection({
+    totalEstimatedHours: timeline.total_estimated_hours,
+    availableHoursPerWeek: timeline.available_hours_per_week,
+    daysUntilDeadline: timeline.days_until_deadline,
+  });
+
+  const createdDate = new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(new Date(timeline.created_at));
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <h3 className="text-xl font-semibold">{title}</h3>
-      <p className="mt-3 text-sm leading-6 text-slate-400">{description}</p>
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+        Saved {createdDate}
+      </p>
+
+      <h3 className="mt-4 text-2xl font-semibold">{timeline.goal_title}</h3>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <MiniMetric
+          label="Projected"
+          value={`${projection.projectedDays} days`}
+        />
+
+        <MiniMetric label="Risk" value={projection.deadlineRisk} />
+
+        <MiniMetric
+          label="Weekly Need"
+          value={`${projection.requiredWeeklyHours}h`}
+        />
+
+        <MiniMetric
+          label="Current Capacity"
+          value={`${timeline.available_hours_per_week}h/week`}
+        />
+      </div>
+
+      <p className="mt-5 text-sm leading-7 text-slate-400">
+        {projection.recommendation}
+      </p>
+    </div>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-1 font-semibold text-slate-200">{value}</p>
     </div>
   );
 }

@@ -16,7 +16,41 @@ export default function Home() {
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] text-white">
       <BackgroundOrbs />
 
-      <section className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-5 py-16 sm:px-6 sm:py-20">
+      <header className="fixed left-0 right-0 top-0 z-50 px-5 py-5 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/25 px-4 py-3 shadow-[0_20px_80px_rgba(0,0,0,0.25)] backdrop-blur-xl">
+          <a
+            href="/"
+            className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-300 transition hover:text-white"
+          >
+            ChronoForge
+          </a>
+
+          <nav className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="/create"
+              className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white sm:inline-flex"
+            >
+              Create
+            </a>
+
+            <a
+              href="/dashboard"
+              className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white sm:inline-flex"
+            >
+              Dashboard
+            </a>
+
+            <a
+              href="/login"
+              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_0_30px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-200 hover:shadow-[0_0_45px_rgba(255,255,255,0.24)]"
+            >
+              Login
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <section className="relative z-10 mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-5 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32">
         <p className="mb-4 text-center text-sm uppercase tracking-[0.4em] text-slate-400">
           ChronoForge
         </p>
@@ -55,9 +89,13 @@ export default function Home() {
           {demoProjection.recommendation}
         </p>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <PremiumButton href="/create" fullWidth>
             Forge My Timeline
+          </PremiumButton>
+
+          <PremiumButton href="/login" variant="secondary" fullWidth>
+            Login to Save
           </PremiumButton>
         </div>
       </section>
@@ -190,9 +228,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <PremiumButton href="/create" variant="secondary" fullWidth>
             Open Goal Architect
+          </PremiumButton>
+
+          <PremiumButton href="/dashboard" variant="secondary" fullWidth>
+            View Dashboard
           </PremiumButton>
         </div>
       </section>
