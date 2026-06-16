@@ -7,6 +7,7 @@ import { PremiumButton } from "@/components/premium-button";
 import { SaveTimelineButton } from "@/components/save-timeline-button";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
+import { diagnoseExecution } from "@/lib/diagnosis-engine";
 import {
   analyzeTimelinePressure,
   generateTimelinePhases,
@@ -27,6 +28,8 @@ export default function CreateGoalPage() {
     availableHoursPerWeek: safeAvailableHoursPerWeek,
     daysUntilDeadline: safeDaysUntilDeadline,
   });
+
+  const diagnosis = diagnoseExecution(projection);
 
   const scenarios = [
     {
@@ -277,6 +280,48 @@ export default function CreateGoalPage() {
                     value={`${projection.scopeReductionNeeded}%`}
                     insight="This estimates how much scope may need to be reduced if your current pace cannot meet the deadline."
                   />
+                </div>
+
+                <div className="mt-6 rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-5 shadow-[0_20px_90px_rgba(34,211,238,0.08)] backdrop-blur-xl">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
+                      Execution Diagnosis
+                    </p>
+
+                    <span className="w-fit rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">
+                      {diagnosis.severity}
+                    </span>
+                  </div>
+
+                  <h2 className="mt-4 text-2xl font-semibold text-white">
+                    {diagnosis.title}
+                  </h2>
+
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    {diagnosis.summary}
+                  </p>
+
+                  <div className="mt-5 grid gap-4 md:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                        Primary Problem
+                      </p>
+
+                      <p className="mt-3 text-sm leading-6 text-slate-300">
+                        {diagnosis.primaryProblem}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+                        Recommended Action
+                      </p>
+
+                      <p className="mt-3 text-sm leading-6 text-cyan-100">
+                        {diagnosis.recommendedAction}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <SaveTimelineButton

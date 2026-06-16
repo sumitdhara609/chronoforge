@@ -5,6 +5,7 @@ import { DeleteTimelineButton } from "@/components/delete-timeline-button";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection } from "@/lib/chrono-engine";
+import { diagnoseExecution } from "@/lib/diagnosis-engine";
 import { createClient } from "@/lib/supabase/server";
 
 type Timeline = {
@@ -141,6 +142,8 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
     daysUntilDeadline: timeline.days_until_deadline,
   });
 
+  const diagnosis = diagnoseExecution(projection);
+
   const createdDate = new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
   }).format(new Date(timeline.created_at));
@@ -185,6 +188,30 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
       <p className="mt-5 text-sm leading-7 text-slate-400">
         {projection.recommendation}
       </p>
+
+      <div className="mt-5 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4 shadow-[0_20px_70px_rgba(34,211,238,0.06)]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+            Execution Diagnosis
+          </p>
+
+          <span className="w-fit rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">
+            {diagnosis.severity}
+          </span>
+        </div>
+
+        <h4 className="mt-3 text-lg font-semibold text-white">
+          {diagnosis.title}
+        </h4>
+
+        <p className="mt-2 text-sm leading-6 text-slate-300">
+          {diagnosis.primaryProblem}
+        </p>
+
+        <p className="mt-3 text-sm leading-6 text-cyan-100">
+          {diagnosis.recommendedAction}
+        </p>
+      </div>
 
       <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
         <a
