@@ -5,6 +5,11 @@ export type TimelinePhase = {
   estimatedHours: number;
 };
 
+export type TimelinePressure = {
+  highestPressurePhase: TimelinePhase;
+  summary: string;
+};
+
 const PHASE_BLUEPRINTS = [
   {
     title: "Foundation",
@@ -41,4 +46,17 @@ export function generateTimelinePhases(totalEstimatedHours: number) {
     ...phase,
     estimatedHours: Math.round((safeTotalHours * phase.percentage) / 100),
   })) satisfies TimelinePhase[];
+}
+
+export function analyzeTimelinePressure(
+  phases: TimelinePhase[]
+): TimelinePressure {
+  const highestPressurePhase = phases.reduce((highest, current) =>
+    current.estimatedHours > highest.estimatedHours ? current : highest
+  );
+
+  return {
+    highestPressurePhase,
+    summary: `${highestPressurePhase.title} carries the highest load with ${highestPressurePhase.estimatedHours}h, making it the phase most likely to define the success or delay of this goal.`,
+  };
 }

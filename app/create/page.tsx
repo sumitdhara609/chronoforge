@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
-import { generateTimelinePhases } from "@/lib/timeline-generator";
+import {
+  analyzeTimelinePressure,
+  generateTimelinePhases,
+} from "@/lib/timeline-generator";
 
 export default function CreateGoalPage() {
   const [goalTitle, setGoalTitle] = useState("Build ChronoForge MVP");
@@ -17,6 +20,7 @@ export default function CreateGoalPage() {
   });
 
   const timelinePhases = generateTimelinePhases(totalEstimatedHours);
+  const timelinePressure = analyzeTimelinePressure(timelinePhases);
   const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   return (
@@ -204,6 +208,30 @@ export default function CreateGoalPage() {
               easier to understand, sequence, and execute.
             </p>
           </div>
+
+<div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5">
+  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+    Pressure Indicator
+  </p>
+
+  <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div>
+      <p className="text-sm text-slate-400">Highest Pressure Phase</p>
+      <h3 className="mt-2 text-3xl font-semibold">
+        {timelinePressure.highestPressurePhase.title}
+      </h3>
+    </div>
+
+    <div className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
+      {timelinePressure.highestPressurePhase.estimatedHours}h ·{" "}
+      {timelinePressure.highestPressurePhase.percentage}%
+    </div>
+  </div>
+
+  <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400">
+    {timelinePressure.summary}
+  </p>
+</div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {timelinePhases.map((phase, index) => (
