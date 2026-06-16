@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AuthNavigation } from "@/components/auth-navigation";
 import { BackgroundOrbs } from "@/components/background-orbs";
+import { CopySummaryButton } from "@/components/copy-summary-button";
 import { DeleteTimelineButton } from "@/components/delete-timeline-button";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
@@ -144,6 +145,23 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
 
   const diagnosis = diagnoseExecution(projection);
 
+  const copyableSummary = [
+    "ChronoForge Timeline Summary",
+    "",
+    `Goal: ${timeline.goal_title}`,
+    `Projected Completion: ${projection.projectedDays} days`,
+    `Deadline Risk: ${projection.deadlineRisk}`,
+    `Burnout Risk: ${projection.burnoutRisk}`,
+    `Required Weekly Hours: ${projection.requiredWeeklyHours}h`,
+    `Recovery Buffer: ${projection.recoveryBufferDays} days`,
+    `Scope Reduction Needed: ${projection.scopeReductionNeeded}%`,
+    "",
+    `Diagnosis: ${diagnosis.title}`,
+    `Severity: ${diagnosis.severity}`,
+    `Primary Problem: ${diagnosis.primaryProblem}`,
+    `Recommended Action: ${diagnosis.recommendedAction}`,
+  ].join("\n");
+
   const createdDate = new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
   }).format(new Date(timeline.created_at));
@@ -214,12 +232,16 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
       </div>
 
       <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-        <a
-          href={`/create?timeline=${timeline.id}`}
-          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
-        >
-          Rebuild Plan
-        </a>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a
+            href={`/create?timeline=${timeline.id}`}
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
+          >
+            Rebuild Plan
+          </a>
+
+          <CopySummaryButton summary={copyableSummary} />
+        </div>
 
         <DeleteTimelineButton timelineId={timeline.id} />
       </div>

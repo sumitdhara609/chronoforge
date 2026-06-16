@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BackgroundOrbs } from "@/components/background-orbs";
+import { CopySummaryButton } from "@/components/copy-summary-button";
 import { HoverInsight } from "@/components/hover-insight";
 import { PremiumButton } from "@/components/premium-button";
 import { SaveTimelineButton } from "@/components/save-timeline-button";
@@ -31,6 +32,27 @@ export default function CreateGoalPage() {
 
   const diagnosis = diagnoseExecution(projection);
 
+  const timelinePhases = generateTimelinePhases(safeTotalEstimatedHours);
+  const timelinePressure = analyzeTimelinePressure(timelinePhases);
+  const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
+
+  const copyableSummary = [
+    "ChronoForge Timeline Summary",
+    "",
+    `Goal: ${displayGoalTitle}`,
+    `Projected Completion: ${projection.projectedDays} days`,
+    `Deadline Risk: ${projection.deadlineRisk}`,
+    `Burnout Risk: ${projection.burnoutRisk}`,
+    `Required Weekly Hours: ${projection.requiredWeeklyHours}h`,
+    `Recovery Buffer: ${projection.recoveryBufferDays} days`,
+    `Scope Reduction Needed: ${projection.scopeReductionNeeded}%`,
+    "",
+    `Diagnosis: ${diagnosis.title}`,
+    `Severity: ${diagnosis.severity}`,
+    `Primary Problem: ${diagnosis.primaryProblem}`,
+    `Recommended Action: ${diagnosis.recommendedAction}`,
+  ].join("\n");
+
   const scenarios = [
     {
       title: "Current Pace",
@@ -58,10 +80,6 @@ export default function CreateGoalPage() {
       daysUntilDeadline: safeDaysUntilDeadline,
     }),
   }));
-
-  const timelinePhases = generateTimelinePhases(safeTotalEstimatedHours);
-  const timelinePressure = analyzeTimelinePressure(timelinePhases);
-  const displayGoalTitle = goalTitle.trim() || "Untitled Timeline";
 
   const hasUserInput =
     goalTitle.trim().length > 0 ||
@@ -321,6 +339,10 @@ export default function CreateGoalPage() {
                         {diagnosis.recommendedAction}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="mt-5 border-t border-cyan-400/20 pt-5">
+                    <CopySummaryButton summary={copyableSummary} />
                   </div>
                 </div>
 
