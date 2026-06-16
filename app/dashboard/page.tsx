@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
+import { AuthNavigation } from "@/components/auth-navigation";
 import { BackgroundOrbs } from "@/components/background-orbs";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
-import { createClient } from "@/lib/supabase/server";
 import { calculateProjection } from "@/lib/chrono-engine";
+import { createClient } from "@/lib/supabase/server";
 
 type Timeline = {
   id: string;
@@ -39,14 +40,12 @@ export default async function DashboardPage() {
       <BackgroundOrbs />
 
       <section className="relative z-10 mx-auto max-w-6xl">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <PremiumButton href="/" variant="ghost">
             Back to ChronoForge
           </PremiumButton>
 
-          <PremiumButton href="/create" variant="secondary">
-            Forge New Timeline
-          </PremiumButton>
+          <AuthNavigation />
         </div>
 
         <p className="mb-4 text-sm uppercase tracking-[0.4em] text-slate-400">
@@ -63,6 +62,22 @@ export default async function DashboardPage() {
           saved timelines are stored securely with your account.
         </p>
 
+        <div className="mt-8 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-5 shadow-[0_20px_90px_rgba(16,185,129,0.08)] backdrop-blur-xl">
+          <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">
+            Active Session
+          </p>
+
+          <h2 className="mt-3 text-2xl font-semibold text-white">
+            You are signed in securely.
+          </h2>
+
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
+            Your private timeline vault is linked to{" "}
+            <span className="font-medium text-white">{user.email}</span>. Only
+            this account can access its saved goal architectures.
+          </p>
+        </div>
+
         <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -75,7 +90,7 @@ export default async function DashboardPage() {
               </h2>
             </div>
 
-            <div className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
+            <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
               {savedTimelines.length} saved
             </div>
           </div>
@@ -96,7 +111,9 @@ export default async function DashboardPage() {
               </p>
 
               <div className="mt-6">
-                <PremiumButton href="/create">Create First Timeline</PremiumButton>
+                <PremiumButton href="/create">
+                  Create First Timeline
+                </PremiumButton>
               </div>
             </div>
           ) : (
@@ -129,11 +146,21 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-        Saved {createdDate}
-      </p>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            Saved {createdDate}
+          </p>
 
-      <h3 className="mt-4 text-2xl font-semibold">{timeline.goal_title}</h3>
+          <h3 className="mt-4 text-2xl font-semibold">
+            {timeline.goal_title}
+          </h3>
+        </div>
+
+        <div className="w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+          {projection.deadlineRisk}
+        </div>
+      </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <MiniMetric

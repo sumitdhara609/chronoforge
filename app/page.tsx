@@ -4,6 +4,7 @@ import { PremiumButton } from "@/components/premium-button";
 import { ProductIdentityStrip } from "@/components/product-identity-strip";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection } from "@/lib/chrono-engine";
+import { AuthNavigation } from "@/components/auth-navigation";
 
 export default function Home() {
   const demoProjection = calculateProjection({
@@ -25,28 +26,7 @@ export default function Home() {
             ChronoForge
           </a>
 
-          <nav className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="/create"
-              className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white sm:inline-flex"
-            >
-              Create
-            </a>
-
-            <a
-              href="/dashboard"
-              className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white sm:inline-flex"
-            >
-              Dashboard
-            </a>
-
-            <a
-              href="/login"
-              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_0_30px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-200 hover:shadow-[0_0_45px_rgba(255,255,255,0.24)]"
-            >
-              Login
-            </a>
-          </nav>
+          <AuthNavigation />
         </div>
       </header>
 
