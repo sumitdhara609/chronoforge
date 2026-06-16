@@ -8,6 +8,7 @@ import { PremiumButton } from "@/components/premium-button";
 import { SaveTimelineButton } from "@/components/save-timeline-button";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
+import { calculateChronoScore } from "@/lib/chrono-score";
 import { diagnoseExecution } from "@/lib/diagnosis-engine";
 import {
   analyzeTimelinePressure,
@@ -31,6 +32,7 @@ export default function CreateGoalPage() {
   });
 
   const diagnosis = diagnoseExecution(projection);
+  const chronoScore = calculateChronoScore(projection);
 
   const timelinePhases = generateTimelinePhases(safeTotalEstimatedHours);
   const timelinePressure = analyzeTimelinePressure(timelinePhases);
@@ -40,6 +42,10 @@ export default function CreateGoalPage() {
     "ChronoForge Timeline Summary",
     "",
     `Goal: ${displayGoalTitle}`,
+    `ChronoScore: ${chronoScore.score}/100`,
+    `Grade: ${chronoScore.grade}`,
+    `Score Label: ${chronoScore.label}`,
+    "",
     `Projected Completion: ${projection.projectedDays} days`,
     `Deadline Risk: ${projection.deadlineRisk}`,
     `Burnout Risk: ${projection.burnoutRisk}`,
@@ -241,8 +247,35 @@ export default function CreateGoalPage() {
               </div>
             ) : (
               <>
+                <div className="mt-8 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm uppercase tracking-[0.3em] text-violet-300">
+                      ChronoScore
+                    </p>
+
+                    <span className="w-fit rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">
+                      Grade {chronoScore.grade}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 flex items-end gap-3">
+                    <span className="text-6xl font-semibold tracking-tight">
+                      {chronoScore.score}
+                    </span>
+                    <span className="pb-2 text-slate-400">/ 100</span>
+                  </div>
+
+                  <h3 className="mt-4 text-2xl font-semibold text-white">
+                    {chronoScore.label}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    {chronoScore.summary}
+                  </p>
+                </div>
+
                 <HoverInsight insight="This is the central ChronoEngine forecast: how long your goal may take at your current pace.">
-                  <div className="mt-8 rounded-3xl border border-white/10 bg-black/30 p-6 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
+                  <div className="mt-6 rounded-3xl border border-white/10 bg-black/30 p-6 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/40 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
                     <p className="text-sm text-slate-400">
                       Projected Completion
                     </p>

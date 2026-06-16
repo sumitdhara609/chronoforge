@@ -6,6 +6,7 @@ import { DeleteTimelineButton } from "@/components/delete-timeline-button";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
 import { calculateProjection } from "@/lib/chrono-engine";
+import { calculateChronoScore } from "@/lib/chrono-score";
 import { diagnoseExecution } from "@/lib/diagnosis-engine";
 import { createClient } from "@/lib/supabase/server";
 
@@ -144,11 +145,16 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
   });
 
   const diagnosis = diagnoseExecution(projection);
+  const chronoScore = calculateChronoScore(projection);
 
   const copyableSummary = [
     "ChronoForge Timeline Summary",
     "",
     `Goal: ${timeline.goal_title}`,
+    `ChronoScore: ${chronoScore.score}/100`,
+    `Grade: ${chronoScore.grade}`,
+    `Score Label: ${chronoScore.label}`,
+    "",
     `Projected Completion: ${projection.projectedDays} days`,
     `Deadline Risk: ${projection.deadlineRisk}`,
     `Burnout Risk: ${projection.burnoutRisk}`,
@@ -179,9 +185,36 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
           </h3>
         </div>
 
-        <div className="w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
-          {projection.deadlineRisk}
+        <div className="w-fit rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-violet-200">
+          {chronoScore.score}/100
         </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-violet-400/20 bg-violet-400/10 p-4 shadow-[0_20px_70px_rgba(139,92,246,0.06)]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs uppercase tracking-[0.25em] text-violet-300">
+            ChronoScore
+          </p>
+
+          <span className="w-fit rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-200">
+            Grade {chronoScore.grade}
+          </span>
+        </div>
+
+        <div className="mt-4 flex items-end gap-2">
+          <span className="text-4xl font-semibold tracking-tight">
+            {chronoScore.score}
+          </span>
+          <span className="pb-1 text-sm text-slate-400">/ 100</span>
+        </div>
+
+        <h4 className="mt-3 text-lg font-semibold text-white">
+          {chronoScore.label}
+        </h4>
+
+        <p className="mt-2 text-sm leading-6 text-slate-300">
+          {chronoScore.summary}
+        </p>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -234,10 +267,10 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
       <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row">
           <a
-            href={`/create?timeline=${timeline.id}`}
+            href={`/dashboard/${timeline.id}`}
             className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
           >
-            Rebuild Plan
+            View Report
           </a>
 
           <CopySummaryButton summary={copyableSummary} />
