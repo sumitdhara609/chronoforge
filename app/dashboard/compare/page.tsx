@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { BackgroundOrbs } from "@/components/background-orbs";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
+import { TimelineCompareSelector } from "@/components/timeline-compare-selector";
 import { calculateProjection, type RiskLevel } from "@/lib/chrono-engine";
 import { calculateChronoScore } from "@/lib/chrono-score";
 import {
@@ -19,7 +20,18 @@ type Timeline = {
   created_at: string;
 };
 
-export default async function CompareTimelinesPage() {
+type CompareTimelinesPageProps = {
+  searchParams: Promise<{
+    first?: string;
+    second?: string;
+  }>;
+};
+
+export default async function CompareTimelinesPage({
+  searchParams,
+}: CompareTimelinesPageProps) {
+  const { first, second } = await searchParams;
+
   const supabase = await createClient();
 
   const {
@@ -56,13 +68,25 @@ export default async function CompareTimelinesPage() {
     } satisfies ComparisonTimeline;
   });
 
-  const firstTimeline = analyzedTimelines[0];
-  const secondTimeline = analyzedTimelines[1];
+  const fallbackFirst = analyzedTimelines[0];
+  const fallbackSecond = analyzedTimelines[1];
 
-  const verdict =
-    firstTimeline && secondTimeline
-      ? compareTimelines(firstTimeline, secondTimeline)
-      : null;
+  const selectedFirstTimeline =
+    analyzedTimelines.find((timeline) => timeline.id === first) ??
+    fallbackFirst;
+
+  const selectedSecondTimeline =
+    analyzedTimelines.find((timeline) => timeline.id === second) ??
+    fallbackSecond;
+
+  const hasValidSelection =
+    selectedFirstTimeline &&
+    selectedSecondTimeline &&
+    selectedFirstTimeline.id !== selectedSecondTimeline.id;
+
+  const verdict = hasValidSelection
+    ? compareTimelines(selectedFirstTimeline, selectedSecondTimeline)
+    : null;
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
@@ -113,9 +137,20 @@ export default async function CompareTimelinesPage() {
               </PremiumButton>
             </div>
           </div>
-        ) : verdict && firstTimeline && secondTimeline ? (
+        ) : verdict && selectedFirstTimeline && selectedSecondTimeline ? (
           <>
-            <div className="mt-10 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
+            <div className="mt-10">
+              <TimelineCompareSelector
+                timelines={savedTimelines.map((timeline) => ({
+                  id: timeline.id,
+                  goal_title: timeline.goal_title,
+                }))}
+                selectedFirstId={selectedFirstTimeline.id}
+                selectedSecondId={selectedSecondTimeline.id}
+              />
+            </div>
+
+            <div className="mt-8 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
               <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
                   <p className="text-sm uppercase tracking-[0.3em] text-violet-300">
@@ -151,8 +186,15 @@ export default async function CompareTimelinesPage() {
             </div>
 
             <div className="mt-8 grid gap-6 lg:grid-cols-2">
-              <ComparisonCard timeline={firstTimeline} label="Timeline A" />
-              <ComparisonCard timeline={secondTimeline} label="Timeline B" />
+              <ComparisonCard
+                timeline={selectedFirstTimeline}
+                label="Timeline A"
+              />
+
+              <ComparisonCard
+                timeline={selectedSecondTimeline}
+                label="Timeline B"
+              />
             </div>
 
             <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
@@ -176,50 +218,50 @@ export default async function CompareTimelinesPage() {
               <div className="mt-8 overflow-hidden rounded-2xl border border-white/10">
                 <ComparisonRow
                   label="ChronoScore"
-                  first={`${firstTimeline.chronoScore.score}/100`}
-                  second={`${secondTimeline.chronoScore.score}/100`}
+                  first={`${selectedFirstTimeline.chronoScore.score}/100`}
+                  second={`${selectedSecondTimeline.chronoScore.score}/100`}
                 />
 
                 <ComparisonRow
                   label="Grade"
-                  first={firstTimeline.chronoScore.grade}
-                  second={secondTimeline.chronoScore.grade}
+                  first={selectedFirstTimeline.chronoScore.grade}
+                  second={selectedSecondTimeline.chronoScore.grade}
                 />
 
                 <ComparisonRow
                   label="Projected Completion"
-                  first={`${firstTimeline.projection.projectedDays} days`}
-                  second={`${secondTimeline.projection.projectedDays} days`}
+                  first={`${selectedFirstTimeline.projection.projectedDays} days`}
+                  second={`${selectedSecondTimeline.projection.projectedDays} days`}
                 />
 
                 <ComparisonRow
                   label="Deadline Risk"
-                  first={firstTimeline.projection.deadlineRisk}
-                  second={secondTimeline.projection.deadlineRisk}
+                  first={selectedFirstTimeline.projection.deadlineRisk}
+                  second={selectedSecondTimeline.projection.deadlineRisk}
                 />
 
                 <ComparisonRow
                   label="Burnout Risk"
-                  first={firstTimeline.projection.burnoutRisk}
-                  second={secondTimeline.projection.burnoutRisk}
+                  first={selectedFirstTimeline.projection.burnoutRisk}
+                  second={selectedSecondTimeline.projection.burnoutRisk}
                 />
 
                 <ComparisonRow
                   label="Required Weekly Hours"
-                  first={`${firstTimeline.projection.requiredWeeklyHours}h`}
-                  second={`${secondTimeline.projection.requiredWeeklyHours}h`}
+                  first={`${selectedFirstTimeline.projection.requiredWeeklyHours}h`}
+                  second={`${selectedSecondTimeline.projection.requiredWeeklyHours}h`}
                 />
 
                 <ComparisonRow
                   label="Recovery Buffer"
-                  first={`${firstTimeline.projection.recoveryBufferDays} days`}
-                  second={`${secondTimeline.projection.recoveryBufferDays} days`}
+                  first={`${selectedFirstTimeline.projection.recoveryBufferDays} days`}
+                  second={`${selectedSecondTimeline.projection.recoveryBufferDays} days`}
                 />
 
                 <ComparisonRow
                   label="Scope Reduction Needed"
-                  first={`${firstTimeline.projection.scopeReductionNeeded}%`}
-                  second={`${secondTimeline.projection.scopeReductionNeeded}%`}
+                  first={`${selectedFirstTimeline.projection.scopeReductionNeeded}%`}
+                  second={`${selectedSecondTimeline.projection.scopeReductionNeeded}%`}
                 />
               </div>
             </div>
@@ -334,11 +376,11 @@ function ComparisonRow({
 }) {
   return (
     <div className="grid gap-0 border-b border-white/10 bg-black/20 last:border-b-0 md:grid-cols-3">
-      <div className="border-b border-white/10 px-4 py-4 md:border-b-0 md:border-r">
+      <div className="border-b border-white/10 px-4 py-4 md:border-b-0 md:border-r md:border-white/10">
         <p className="text-sm text-slate-400">{label}</p>
       </div>
 
-      <div className="border-b border-white/10 px-4 py-4 md:border-b-0 md:border-r">
+      <div className="border-b border-white/10 px-4 py-4 md:border-b-0 md:border-r md:border-white/10">
         <p className="text-sm font-semibold text-white">{first}</p>
       </div>
 
