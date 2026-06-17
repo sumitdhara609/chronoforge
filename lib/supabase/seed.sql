@@ -26,7 +26,7 @@
 -- ),
 -- (
 --   '00000000-0000-0000-0000-000000000000',
---   'Launch a recruiter-ready SaaS prototype',
+--   'Launch a World-Class SaaS Prototype',
 --   240,
 --   18,
 --   75

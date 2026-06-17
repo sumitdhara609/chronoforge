@@ -10,7 +10,7 @@ import {
 } from "@/lib/timeline-generator";
 
 const demoGoal = {
-  title: "Launch a Recruiter-Ready SaaS Prototype",
+  title: "Launch a World-Class SaaS Prototype",
   totalEstimatedHours: 240,
   availableHoursPerWeek: 18,
   daysUntilDeadline: 75,
@@ -74,7 +74,7 @@ export default function DemoPage() {
 
         <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_30px_140px_rgba(255,255,255,0.06)] backdrop-blur-xl sm:p-8">
           <p className="text-sm uppercase tracking-[0.4em] text-violet-300">
-            Public Recruiter Demo
+            Public Product Demo
           </p>
 
           <div className="mt-5 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
@@ -146,13 +146,13 @@ export default function DemoPage() {
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
               <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                Recruiter Signal
+                Product Intelligence Layer
               </p>
 
               <p className="mt-3 text-sm leading-7 text-slate-300">
                 ChronoScore is a custom scoring layer built from deadline risk,
-                burnout risk, recovery buffer, and scope pressure. It shows
-                product logic beyond simple CRUD.
+                burnout risk, recovery buffer, and scope pressure. It turns raw
+                planning inputs into structured execution intelligence.
               </p>
             </div>
           </div>
@@ -383,11 +383,11 @@ export default function DemoPage() {
           <div className="grid gap-8 lg:grid-cols-[1fr_0.85fr] lg:items-center">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">
-                Why This Project Matters
+                Why ChronoForge Matters
               </p>
 
               <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-                ChronoForge is built to show product thinking, not only coding.
+                ChronoForge is built as a serious execution-intelligence platform.
               </h2>
 
               <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-300">

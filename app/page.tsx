@@ -73,7 +73,9 @@ export default function Home() {
           </PremiumButton>
         </div>
       </section>
-
+<PremiumButton href="/demo" variant="ghost">
+  View Public Demo
+</PremiumButton>
       <div className="relative z-10 pb-16">
         <ProductIdentityStrip />
       </div>
