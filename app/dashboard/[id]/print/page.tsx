@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { ExportTrackerButton } from "@/components/export-tracker-button";
 import { calculateProjection } from "@/lib/chrono-engine";
 import { calculateChronoScore } from "@/lib/chrono-score";
 import { diagnoseExecution } from "@/lib/diagnosis-engine";
@@ -15,6 +16,8 @@ type Timeline = {
   available_hours_per_week: number;
   days_until_deadline: number;
   created_at: string;
+  updated_at: string;
+  last_exported_at: string | null;
 };
 
 type PrintTimelinePageProps = {
@@ -41,7 +44,7 @@ export default async function PrintTimelinePage({
   const { data: timeline, error } = await supabase
     .from("timelines")
     .select(
-      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at"
+      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at"
     )
     .eq("id", id)
     .single();
@@ -67,6 +70,16 @@ export default async function PrintTimelinePage({
     dateStyle: "long",
   }).format(new Date(savedTimeline.created_at));
 
+  const updatedDate = new Intl.DateTimeFormat("en", {
+    dateStyle: "long",
+  }).format(new Date(savedTimeline.updated_at));
+
+  const lastExportedDate = savedTimeline.last_exported_at
+    ? new Intl.DateTimeFormat("en", {
+        dateStyle: "long",
+      }).format(new Date(savedTimeline.last_exported_at))
+    : null;
+
   const generatedDate = new Intl.DateTimeFormat("en", {
     dateStyle: "long",
   }).format(new Date());
@@ -82,17 +95,7 @@ export default async function PrintTimelinePage({
             Back to Report
           </a>
 
-          <button
-            type="button"
-            onClick={undefined}
-            className="hidden rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-white"
-          >
-            Use Ctrl + P to Export
-          </button>
-
-          <p className="rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-white">
-            Press Ctrl + P to Save as PDF
-          </p>
+          <ExportTrackerButton timelineId={savedTimeline.id} />
         </div>
 
         <header className="border-b border-slate-200 pb-8">
@@ -121,6 +124,16 @@ export default async function PrintTimelinePage({
               <p className="mt-4 text-sm text-slate-500">Timeline Created</p>
               <p className="mt-1 font-semibold text-slate-950">
                 {createdDate}
+              </p>
+
+              <p className="mt-4 text-sm text-slate-500">Last Updated</p>
+              <p className="mt-1 font-semibold text-slate-950">
+                {updatedDate}
+              </p>
+
+              <p className="mt-4 text-sm text-slate-500">Last Exported</p>
+              <p className="mt-1 font-semibold text-slate-950">
+                {lastExportedDate ?? "Not exported yet"}
               </p>
             </div>
           </div>
