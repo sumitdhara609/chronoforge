@@ -164,9 +164,18 @@ export default async function DashboardPage() {
               </h2>
             </div>
 
-            <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
-              {savedTimelines.length} saved
-            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+  <a
+    href="/dashboard/compare"
+    className="rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-center text-sm font-semibold text-violet-100 transition hover:-translate-y-0.5 hover:bg-violet-400/15"
+  >
+    Compare Timelines
+  </a>
+
+  <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
+    {savedTimelines.length} saved
+  </div>
+</div>
           </div>
 
           {error ? (
