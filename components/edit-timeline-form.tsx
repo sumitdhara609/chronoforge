@@ -28,6 +28,7 @@ export function EditTimelineForm({
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(
     String(initialDaysUntilDeadline)
   );
+
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -78,9 +79,8 @@ export function EditTimelineForm({
       <h2 className="text-2xl font-semibold text-white">Edit Timeline</h2>
 
       <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
-        Update the saved goal architecture. ChronoForge will automatically
-        recalculate the projection, diagnosis, ChronoScore, and vault
-        intelligence after saving.
+        Update this saved goal architecture. ChronoForge will recalculate the
+        projection, diagnosis, ChronoScore, and vault intelligence after saving.
       </p>
 
       <div className="mt-6 space-y-5">
