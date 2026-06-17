@@ -18,6 +18,8 @@ type Timeline = {
   available_hours_per_week: number;
   days_until_deadline: number;
   created_at: string;
+  updated_at: string;
+  last_exported_at: string | null;
 };
 
 export default async function DashboardPage() {
@@ -34,7 +36,7 @@ export default async function DashboardPage() {
   const { data: timelines, error } = await supabase
     .from("timelines")
     .select(
-      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at"
+      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at"
     )
     .order("created_at", { ascending: false });
 
@@ -165,17 +167,17 @@ export default async function DashboardPage() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-  <a
-    href="/dashboard/compare"
-    className="rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-center text-sm font-semibold text-violet-100 transition hover:-translate-y-0.5 hover:bg-violet-400/15"
-  >
-    Compare Timelines
-  </a>
+              <a
+                href="/dashboard/compare"
+                className="rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-center text-sm font-semibold text-violet-100 transition hover:-translate-y-0.5 hover:bg-violet-400/15"
+              >
+                Compare Timelines
+              </a>
 
-  <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
-    {savedTimelines.length} saved
-  </div>
-</div>
+              <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
+                {savedTimelines.length} saved
+              </div>
+            </div>
           </div>
 
           {error ? (
@@ -251,6 +253,16 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
     dateStyle: "medium",
   }).format(new Date(timeline.created_at));
 
+  const updatedDate = new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(new Date(timeline.updated_at));
+
+  const lastExportedDate = timeline.last_exported_at
+    ? new Intl.DateTimeFormat("en", {
+        dateStyle: "medium",
+      }).format(new Date(timeline.last_exported_at))
+    : null;
+
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -258,6 +270,16 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
             Saved {createdDate}
           </p>
+
+          <p className="mt-2 text-xs text-slate-500">
+            Last updated {updatedDate}
+          </p>
+
+          {lastExportedDate ? (
+            <p className="mt-1 text-xs text-emerald-300">
+              Last exported {lastExportedDate}
+            </p>
+          ) : null}
 
           <h3 className="mt-4 text-2xl font-semibold">
             {timeline.goal_title}
@@ -346,20 +368,20 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
       <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row">
           <a
-  href={`/dashboard/${timeline.id}`}
-  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
->
-  View Report
-</a>
+            href={`/dashboard/${timeline.id}`}
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
+          >
+            View Report
+          </a>
 
-<a
-  href={`/dashboard/${timeline.id}/edit`}
-  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
->
-  Edit
-</a>
+          <a
+            href={`/dashboard/${timeline.id}/edit`}
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
+          >
+            Edit
+          </a>
 
-<CopySummaryButton summary={copyableSummary} />
+          <CopySummaryButton summary={copyableSummary} />
         </div>
 
         <DeleteTimelineButton timelineId={timeline.id} />

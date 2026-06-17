@@ -20,6 +20,8 @@ type Timeline = {
   available_hours_per_week: number;
   days_until_deadline: number;
   created_at: string;
+  updated_at: string;
+  last_exported_at: string | null;
 };
 
 type TimelineDetailPageProps = {
@@ -46,7 +48,7 @@ export default async function TimelineDetailPage({
   const { data: timeline, error } = await supabase
     .from("timelines")
     .select(
-      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at"
+      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at"
     )
     .eq("id", id)
     .single();
@@ -72,11 +74,23 @@ export default async function TimelineDetailPage({
     dateStyle: "long",
   }).format(new Date(savedTimeline.created_at));
 
+  const updatedDate = new Intl.DateTimeFormat("en", {
+    dateStyle: "long",
+  }).format(new Date(savedTimeline.updated_at));
+
+  const lastExportedDate = savedTimeline.last_exported_at
+    ? new Intl.DateTimeFormat("en", {
+        dateStyle: "long",
+      }).format(new Date(savedTimeline.last_exported_at))
+    : null;
+
   const copyableSummary = [
     "ChronoForge Timeline Report",
     "",
     `Goal: ${savedTimeline.goal_title}`,
     `Created: ${createdDate}`,
+    `Last Updated: ${updatedDate}`,
+    lastExportedDate ? `Last Exported: ${lastExportedDate}` : null,
     "",
     "ChronoScore",
     `Score: ${chronoScore.score}/100`,
@@ -101,7 +115,9 @@ export default async function TimelineDetailPage({
     "Timeline Pressure",
     `Highest Pressure Phase: ${pressure.highestPressurePhase.title}`,
     `Estimated Phase Load: ${pressure.highestPressurePhase.estimatedHours}h`,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
@@ -114,17 +130,24 @@ export default async function TimelineDetailPage({
           </PremiumButton>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-  <a
-    href={`/dashboard/${savedTimeline.id}/edit`}
-    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
-  >
-    Edit Timeline
-  </a>
+            <a
+              href={`/dashboard/${savedTimeline.id}/edit`}
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
+            >
+              Edit Timeline
+            </a>
 
-  <CopySummaryButton summary={copyableSummary} />
-  <DeleteTimelineButton timelineId={savedTimeline.id} />
-</div>
-</div>
+            <a
+              href={`/dashboard/${savedTimeline.id}/print`}
+              className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-center text-sm font-semibold text-emerald-100 transition hover:-translate-y-0.5 hover:bg-emerald-400/15"
+            >
+              Export Report
+            </a>
+
+            <CopySummaryButton summary={copyableSummary} />
+            <DeleteTimelineButton timelineId={savedTimeline.id} />
+          </div>
+        </div>
 
         <p className="mb-4 text-sm uppercase tracking-[0.4em] text-slate-400">
           Timeline Report
@@ -136,9 +159,16 @@ export default async function TimelineDetailPage({
 
         <p className="mt-6 max-w-3xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
           A full ChronoForge report generated from your saved goal architecture.
-          Created on{" "}
-          <span className="font-medium text-white">{createdDate}</span>.
+          Created on <span className="font-medium text-white">{createdDate}</span>{" "}
+          and last updated on{" "}
+          <span className="font-medium text-white">{updatedDate}</span>.
         </p>
+
+        {lastExportedDate ? (
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-emerald-200">
+            Last exported on {lastExportedDate}.
+          </p>
+        ) : null}
 
         <div className="mt-10 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

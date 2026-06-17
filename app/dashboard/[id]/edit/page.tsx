@@ -12,6 +12,8 @@ type Timeline = {
   available_hours_per_week: number;
   days_until_deadline: number;
   created_at: string;
+  updated_at: string;
+  last_exported_at: string | null;
 };
 
 type EditTimelinePageProps = {
@@ -38,7 +40,7 @@ export default async function EditTimelinePage({
   const { data: timeline, error } = await supabase
     .from("timelines")
     .select(
-      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at"
+      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at"
     )
     .eq("id", id)
     .single();
@@ -48,6 +50,20 @@ export default async function EditTimelinePage({
   }
 
   const savedTimeline = timeline as Timeline;
+
+  const createdDate = new Intl.DateTimeFormat("en", {
+    dateStyle: "long",
+  }).format(new Date(savedTimeline.created_at));
+
+  const updatedDate = new Intl.DateTimeFormat("en", {
+    dateStyle: "long",
+  }).format(new Date(savedTimeline.updated_at));
+
+  const lastExportedDate = savedTimeline.last_exported_at
+    ? new Intl.DateTimeFormat("en", {
+        dateStyle: "long",
+      }).format(new Date(savedTimeline.last_exported_at))
+    : null;
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
@@ -73,6 +89,23 @@ export default async function EditTimelinePage({
           vault. The report will regenerate from the new values.
         </p>
 
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+          <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+            Timeline Activity
+          </p>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <ActivityMetric label="Created" value={createdDate} />
+
+            <ActivityMetric label="Last Updated" value={updatedDate} />
+
+            <ActivityMetric
+              label="Last Exported"
+              value={lastExportedDate ?? "Not exported yet"}
+            />
+          </div>
+        </div>
+
         <div className="mt-10">
           <EditTimelineForm
             timelineId={savedTimeline.id}
@@ -90,5 +123,19 @@ export default async function EditTimelinePage({
         <SiteFooter />
       </div>
     </main>
+  );
+}
+
+function ActivityMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {label}
+      </p>
+
+      <p className="mt-3 text-sm font-semibold leading-6 text-slate-200">
+        {value}
+      </p>
+    </div>
   );
 }
