@@ -9,6 +9,7 @@ import { calculateProjection } from "@/lib/chrono-engine";
 import { calculateChronoScore } from "@/lib/chrono-score";
 import { diagnoseExecution } from "@/lib/diagnosis-engine";
 import { createClient } from "@/lib/supabase/server";
+import { analyzeVaultIntelligence } from "@/lib/vault-intelligence";
 
 type Timeline = {
   id: string;
@@ -38,6 +39,7 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false });
 
   const savedTimelines = (timelines ?? []) as Timeline[];
+  const vaultIntelligence = analyzeVaultIntelligence(savedTimelines);
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
@@ -80,6 +82,74 @@ export default async function DashboardPage() {
             <span className="font-medium text-white">{user.email}</span>. Only
             this account can access its saved goal architectures.
           </p>
+        </div>
+
+        <div className="mt-8 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-violet-300">
+                Vault Intelligence
+              </p>
+
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+                {vaultIntelligence.vaultHealthLabel}
+              </h2>
+
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
+                {vaultIntelligence.vaultSummary}
+              </p>
+            </div>
+
+            <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-violet-100">
+              Avg Score {vaultIntelligence.averageChronoScore}/100
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <VaultMetric
+              label="Saved Plans"
+              value={`${vaultIntelligence.totalPlans}`}
+            />
+
+            <VaultMetric
+              label="Total Planned Hours"
+              value={`${vaultIntelligence.totalPlannedHours}h`}
+            />
+
+            <VaultMetric
+              label="High-Risk Plans"
+              value={`${vaultIntelligence.highRiskPlans}`}
+            />
+
+            <VaultMetric
+              label="Critical Warnings"
+              value={`${vaultIntelligence.criticalPlans}`}
+            />
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <VaultHighlight
+              label="Strongest Plan"
+              title={
+                vaultIntelligence.strongestPlan?.goal_title ?? "No plan yet"
+              }
+              href={
+                vaultIntelligence.strongestPlan
+                  ? `/dashboard/${vaultIntelligence.strongestPlan.id}`
+                  : "/create"
+              }
+            />
+
+            <VaultHighlight
+              label="Needs Most Attention"
+              title={vaultIntelligence.weakestPlan?.goal_title ?? "No plan yet"}
+              href={
+                vaultIntelligence.weakestPlan
+                  ? `/dashboard/${vaultIntelligence.weakestPlan.id}`
+                  : "/create"
+              }
+            />
+          </div>
         </div>
 
         <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
@@ -288,5 +358,39 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 font-semibold text-slate-200">{value}</p>
     </div>
+  );
+}
+
+function VaultMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+      <p className="text-sm text-slate-400">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function VaultHighlight({
+  label,
+  title,
+  href,
+}: {
+  label: string;
+  title: string;
+  href: string;
+}) {
+  return (
+    <a
+      href={href}
+      className="rounded-2xl border border-white/10 bg-black/20 p-5 transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-black/30"
+    >
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {label}
+      </p>
+
+      <h3 className="mt-3 text-xl font-semibold text-white">{title}</h3>
+
+      <p className="mt-3 text-sm text-violet-200">Open report →</p>
+    </a>
   );
 }
