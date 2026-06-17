@@ -1,0 +1,33 @@
+-- ChronoForge seed data
+-- These rows are examples for local development only.
+-- Replace the user_id values with a real Supabase auth.users id before running locally.
+
+-- insert into public.timelines (
+--   user_id,
+--   goal_title,
+--   total_estimated_hours,
+--   available_hours_per_week,
+--   days_until_deadline
+-- )
+-- values
+-- (
+--   '00000000-0000-0000-0000-000000000000',
+--   'Build a portfolio website',
+--   120,
+--   12,
+--   60
+-- ),
+-- (
+--   '00000000-0000-0000-0000-000000000000',
+--   'Prepare a machine learning project',
+--   180,
+--   10,
+--   45
+-- ),
+-- (
+--   '00000000-0000-0000-0000-000000000000',
+--   'Launch a recruiter-ready SaaS prototype',
+--   240,
+--   18,
+--   75
+-- );
