@@ -8,7 +8,7 @@ export type ExecutionDiagnosis = {
   summary: string;
   primaryProblem: string;
   recommendedAction: string;
-  recruiterSignal: string;
+  productSignal: string;
 };
 
 function getSeverity(
@@ -101,7 +101,7 @@ export function diagnoseExecution(
     summary: getSummary(projection, severity),
     primaryProblem: getPrimaryProblem(projection),
     recommendedAction: getRecommendedAction(projection),
-    recruiterSignal:
+    productSignal:
       "This diagnosis is generated from ChronoForge's custom planning logic, combining deadline risk, burnout risk, scope pressure, and recovery buffer analysis.",
   };
 }
