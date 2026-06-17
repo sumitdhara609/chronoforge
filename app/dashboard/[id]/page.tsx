@@ -114,10 +114,17 @@ export default async function TimelineDetailPage({
           </PremiumButton>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <CopySummaryButton summary={copyableSummary} />
-            <DeleteTimelineButton timelineId={savedTimeline.id} />
-          </div>
-        </div>
+  <a
+    href={`/dashboard/${savedTimeline.id}/edit`}
+    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:-translate-y-0.5 hover:bg-white/10"
+  >
+    Edit Timeline
+  </a>
+
+  <CopySummaryButton summary={copyableSummary} />
+  <DeleteTimelineButton timelineId={savedTimeline.id} />
+</div>
+</div>
 
         <p className="mb-4 text-sm uppercase tracking-[0.4em] text-slate-400">
           Timeline Report
