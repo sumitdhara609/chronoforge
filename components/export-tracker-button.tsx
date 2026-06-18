@@ -7,11 +7,13 @@ type ExportTrackerButtonProps = {
   timelineId: string;
 };
 
-export function ExportTrackerButton({ timelineId }: ExportTrackerButtonProps) {
+export function ExportTrackerButton({
+  timelineId,
+}: ExportTrackerButtonProps) {
   const [status, setStatus] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  async function markAsExported() {
+  async function markAsExportedAndPrint() {
     setIsUpdating(true);
     setStatus("");
 
@@ -31,10 +33,15 @@ export function ExportTrackerButton({ timelineId }: ExportTrackerButtonProps) {
         return;
       }
 
-      setStatus("Export activity updated. You can now press Ctrl + P.");
+      setStatus("Export activity recorded. Opening print dialog...");
+
+      window.setTimeout(() => {
+        window.print();
+      }, 250);
+
       setIsUpdating(false);
     } catch {
-      setStatus("Something went wrong while updating export activity.");
+      setStatus("Something went wrong while preparing this report for export.");
       setIsUpdating(false);
     }
   }
@@ -43,11 +50,11 @@ export function ExportTrackerButton({ timelineId }: ExportTrackerButtonProps) {
     <div className="print:hidden">
       <button
         type="button"
-        onClick={markAsExported}
+        onClick={markAsExportedAndPrint}
         disabled={isUpdating}
         className="rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isUpdating ? "Updating..." : "Mark Export + Print"}
+        {isUpdating ? "Preparing Export..." : "Mark Export + Print"}
       </button>
 
       {status ? (
