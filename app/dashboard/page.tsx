@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { TimelineVaultFilter } from "@/components/timeline-vault-filter";
 import { createClient } from "@/lib/supabase/server";
 import { analyzeVaultIntelligence } from "@/lib/vault-intelligence";
+import { analyzeVaultQuickInsights } from "@/lib/vault-quick-insights";
 
 type Timeline = {
   id: string;
@@ -37,7 +38,9 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false });
 
   const savedTimelines = (timelines ?? []) as Timeline[];
+
   const vaultIntelligence = analyzeVaultIntelligence(savedTimelines);
+  const quickInsights = analyzeVaultQuickInsights(savedTimelines);
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#050711] px-5 py-12 text-white sm:px-6 sm:py-16">
@@ -150,6 +153,55 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        <div className="mt-8 rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-6 shadow-[0_20px_90px_rgba(34,211,238,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
+                Vault Quick Insights
+              </p>
+
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+                What needs attention now.
+              </h2>
+
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
+                ChronoForge highlights the most important execution signals
+                inside your saved timeline vault.
+              </p>
+            </div>
+
+            <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-cyan-100">
+              Live Analysis
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <QuickInsightCard
+              label="Most Urgent"
+              timeline={quickInsights.mostUrgent}
+              fallback="No urgent plan yet"
+            />
+
+            <QuickInsightCard
+              label="Strongest"
+              timeline={quickInsights.strongest}
+              fallback="No strong plan yet"
+            />
+
+            <QuickInsightCard
+              label="Highest Weekly Load"
+              timeline={quickInsights.highestWeeklyLoad}
+              fallback="No weekly load yet"
+            />
+
+            <QuickInsightCard
+              label="Best Recovery Buffer"
+              timeline={quickInsights.bestRecoveryBuffer}
+              fallback="No recovery buffer yet"
+            />
+          </div>
+        </div>
+
         <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -209,6 +261,35 @@ export default async function DashboardPage() {
         <SiteFooter />
       </div>
     </main>
+  );
+}
+
+function QuickInsightCard({
+  label,
+  timeline,
+  fallback,
+}: {
+  label: string;
+  timeline: Timeline | null;
+  fallback: string;
+}) {
+  return (
+    <a
+      href={timeline ? `/dashboard/${timeline.id}` : "/create"}
+      className="rounded-2xl border border-white/10 bg-black/20 p-5 transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-black/30"
+    >
+      <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+        {label}
+      </p>
+
+      <h3 className="mt-3 text-xl font-semibold text-white">
+        {timeline?.goal_title ?? fallback}
+      </h3>
+
+      <p className="mt-3 text-sm text-cyan-200">
+        {timeline ? "Open report →" : "Create timeline →"}
+      </p>
+    </a>
   );
 }
 
