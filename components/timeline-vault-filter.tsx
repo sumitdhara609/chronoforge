@@ -7,6 +7,8 @@ import { calculateProjection } from "@/lib/chrono-engine";
 import { calculateChronoScore } from "@/lib/chrono-score";
 import { diagnoseExecution } from "@/lib/diagnosis-engine";
 
+type TimelineStatus = "PLANNING" | "ACTIVE" | "PAUSED" | "COMPLETED";
+
 type Timeline = {
   id: string;
   goal_title: string;
@@ -16,22 +18,42 @@ type Timeline = {
   created_at: string;
   updated_at: string;
   last_exported_at: string | null;
+  execution_status: TimelineStatus;
+  progress_percentage: number;
+  last_progress_updated_at: string | null;
 };
 
 type RiskFilter = "ALL" | "LOW" | "MEDIUM" | "HIGH";
+
+type StatusFilter =
+  | "ALL"
+  | "PLANNING"
+  | "ACTIVE"
+  | "PAUSED"
+  | "COMPLETED";
 
 type SortMode =
   | "NEWEST"
   | "OLDEST"
   | "HIGHEST_SCORE"
   | "LOWEST_SCORE"
-  | "HIGHEST_RISK";
+  | "HIGHEST_RISK"
+  | "HIGHEST_PROGRESS"
+  | "LOWEST_PROGRESS";
 
 type TimelineVaultFilterProps = {
   timelines: Timeline[];
 };
 
-const FILTERS: RiskFilter[] = ["ALL", "LOW", "MEDIUM", "HIGH"];
+const RISK_FILTERS: RiskFilter[] = ["ALL", "LOW", "MEDIUM", "HIGH"];
+
+const STATUS_FILTERS: StatusFilter[] = [
+  "ALL",
+  "PLANNING",
+  "ACTIVE",
+  "PAUSED",
+  "COMPLETED",
+];
 
 const SORT_OPTIONS: {
   label: string;
@@ -42,10 +64,17 @@ const SORT_OPTIONS: {
   { label: "Highest ChronoScore", value: "HIGHEST_SCORE" },
   { label: "Lowest ChronoScore", value: "LOWEST_SCORE" },
   { label: "Highest Risk First", value: "HIGHEST_RISK" },
+  { label: "Highest Progress", value: "HIGHEST_PROGRESS" },
+  { label: "Lowest Progress", value: "LOWEST_PROGRESS" },
 ];
 
 export function TimelineVaultFilter({ timelines }: TimelineVaultFilterProps) {
-  const [activeFilter, setActiveFilter] = useState<RiskFilter>("ALL");
+  const [activeRiskFilter, setActiveRiskFilter] =
+    useState<RiskFilter>("ALL");
+
+  const [activeStatusFilter, setActiveStatusFilter] =
+    useState<StatusFilter>("ALL");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("NEWEST");
 
@@ -71,14 +100,18 @@ export function TimelineVaultFilter({ timelines }: TimelineVaultFilterProps) {
     return analyzed
       .filter((item) => {
         const matchesRisk =
-          activeFilter === "ALL" ||
-          item.projection.deadlineRisk === activeFilter;
+          activeRiskFilter === "ALL" ||
+          item.projection.deadlineRisk === activeRiskFilter;
+
+        const matchesStatus =
+          activeStatusFilter === "ALL" ||
+          item.timeline.execution_status === activeStatusFilter;
 
         const matchesSearch =
           !normalizedSearch ||
           item.timeline.goal_title.toLowerCase().includes(normalizedSearch);
 
-        return matchesRisk && matchesSearch;
+        return matchesRisk && matchesStatus && matchesSearch;
       })
       .sort((first, second) => {
         if (sortMode === "NEWEST") {
@@ -103,13 +136,33 @@ export function TimelineVaultFilter({ timelines }: TimelineVaultFilterProps) {
           return first.chronoScore.score - second.chronoScore.score;
         }
 
+        if (sortMode === "HIGHEST_PROGRESS") {
+          return (
+            clampProgress(second.timeline.progress_percentage) -
+            clampProgress(first.timeline.progress_percentage)
+          );
+        }
+
+        if (sortMode === "LOWEST_PROGRESS") {
+          return (
+            clampProgress(first.timeline.progress_percentage) -
+            clampProgress(second.timeline.progress_percentage)
+          );
+        }
+
         return (
           getRiskWeight(second.projection.deadlineRisk) -
           getRiskWeight(first.projection.deadlineRisk)
         );
       })
       .map((item) => item.timeline);
-  }, [activeFilter, searchQuery, sortMode, timelines]);
+  }, [
+    activeRiskFilter,
+    activeStatusFilter,
+    searchQuery,
+    sortMode,
+    timelines,
+  ]);
 
   return (
     <div>
@@ -165,21 +218,50 @@ export function TimelineVaultFilter({ timelines }: TimelineVaultFilterProps) {
           </label>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => setActiveFilter(filter)}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 ${
-                activeFilter === filter
-                  ? "border-violet-400/30 bg-violet-400/15 text-violet-100"
-                  : "border-white/10 bg-black/20 text-slate-300 hover:bg-white/10"
-              }`}
-            >
-              {getFilterLabel(filter)}
-            </button>
-          ))}
+        <div className="mt-6">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            Deadline Risk
+          </p>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {RISK_FILTERS.map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setActiveRiskFilter(filter)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 ${
+                  activeRiskFilter === filter
+                    ? "border-violet-400/30 bg-violet-400/15 text-violet-100"
+                    : "border-white/10 bg-black/20 text-slate-300 hover:bg-white/10"
+                }`}
+              >
+                {getRiskFilterLabel(filter)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
+            Execution Status
+          </p>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {STATUS_FILTERS.map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setActiveStatusFilter(filter)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition hover:-translate-y-0.5 ${
+                  activeStatusFilter === filter
+                    ? "border-amber-400/30 bg-amber-400/15 text-amber-100"
+                    : "border-white/10 bg-black/20 text-slate-300 hover:bg-white/10"
+                }`}
+              >
+                {getStatusFilterLabel(filter)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -188,8 +270,8 @@ export function TimelineVaultFilter({ timelines }: TimelineVaultFilterProps) {
           <h3 className="text-2xl font-semibold">No timelines found.</h3>
 
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
-            Try changing the search text, switching the risk filter, or using a
-            different sort mode.
+            Try changing the search text, execution status, risk filter, or
+            sorting method.
           </p>
         </div>
       ) : (
@@ -213,10 +295,29 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
   const diagnosis = diagnoseExecution(projection);
   const chronoScore = calculateChronoScore(projection);
 
+  const progress = clampProgress(timeline.progress_percentage);
+
+  const createdDate = formatDate(timeline.created_at);
+  const updatedDate = formatDate(timeline.updated_at);
+
+  const lastExportedDate = timeline.last_exported_at
+    ? formatDate(timeline.last_exported_at)
+    : null;
+
+  const lastProgressUpdatedDate = timeline.last_progress_updated_at
+    ? formatDate(timeline.last_progress_updated_at)
+    : null;
+
   const copyableSummary = [
     "ChronoForge Timeline Summary",
     "",
     `Goal: ${timeline.goal_title}`,
+    `Status: ${getStatusLabel(timeline.execution_status)}`,
+    `Progress: ${progress}%`,
+    lastProgressUpdatedDate
+      ? `Last Progress Update: ${lastProgressUpdatedDate}`
+      : null,
+    "",
     `ChronoScore: ${chronoScore.score}/100`,
     `Grade: ${chronoScore.grade}`,
     `Score Label: ${chronoScore.label}`,
@@ -232,21 +333,9 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
     `Severity: ${diagnosis.severity}`,
     `Primary Problem: ${diagnosis.primaryProblem}`,
     `Recommended Action: ${diagnosis.recommendedAction}`,
-  ].join("\n");
-
-  const createdDate = new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-  }).format(new Date(timeline.created_at));
-
-  const updatedDate = new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-  }).format(new Date(timeline.updated_at));
-
-  const lastExportedDate = timeline.last_exported_at
-    ? new Intl.DateTimeFormat("en", {
-        dateStyle: "medium",
-      }).format(new Date(timeline.last_exported_at))
-    : null;
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 p-5 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-black/30 hover:shadow-[0_20px_80px_rgba(255,255,255,0.06)]">
@@ -284,6 +373,41 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
             {projection.deadlineRisk} Risk
           </div>
         </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-amber-300">
+              Execution Progress
+            </p>
+
+            <p className="mt-2 text-lg font-semibold text-white">
+              {getStatusLabel(timeline.execution_status)}
+            </p>
+          </div>
+
+          <span
+            className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${getStatusBadgeClass(
+              timeline.execution_status
+            )}`}
+          >
+            {progress}% Complete
+          </span>
+        </div>
+
+        <div className="mt-4 h-2 overflow-hidden rounded-full border border-white/10 bg-black/30">
+          <div
+            className="h-full rounded-full bg-amber-300 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <p className="mt-3 text-xs leading-5 text-slate-400">
+          {lastProgressUpdatedDate
+            ? `Last progress update: ${lastProgressUpdatedDate}`
+            : "No progress update recorded yet."}
+        </p>
       </div>
 
       <div className="mt-5 rounded-2xl border border-violet-400/20 bg-violet-400/10 p-4 shadow-[0_20px_70px_rgba(139,92,246,0.06)]">
@@ -394,11 +518,40 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function getFilterLabel(filter: RiskFilter) {
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+  }).format(new Date(value));
+}
+
+function clampProgress(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function getRiskFilterLabel(filter: RiskFilter) {
   if (filter === "ALL") return "All";
   if (filter === "LOW") return "Low Risk";
   if (filter === "MEDIUM") return "Medium Risk";
   return "High Risk";
+}
+
+function getStatusFilterLabel(filter: StatusFilter) {
+  if (filter === "ALL") return "All Statuses";
+  if (filter === "PLANNING") return "Planning";
+  if (filter === "ACTIVE") return "Active";
+  if (filter === "PAUSED") return "Paused";
+  return "Completed";
+}
+
+function getStatusLabel(status: TimelineStatus) {
+  if (status === "PLANNING") return "Planning";
+  if (status === "ACTIVE") return "Active";
+  if (status === "PAUSED") return "Paused";
+  return "Completed";
 }
 
 function getRiskWeight(risk: "LOW" | "MEDIUM" | "HIGH") {
@@ -417,4 +570,20 @@ function getRiskBadgeClass(risk: "LOW" | "MEDIUM" | "HIGH") {
   }
 
   return "border-rose-400/20 bg-rose-400/10 text-rose-200";
+}
+
+function getStatusBadgeClass(status: TimelineStatus) {
+  if (status === "PLANNING") {
+    return "border-slate-400/20 bg-slate-400/10 text-slate-100";
+  }
+
+  if (status === "ACTIVE") {
+    return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
+  }
+
+  if (status === "PAUSED") {
+    return "border-amber-400/20 bg-amber-400/10 text-amber-100";
+  }
+
+  return "border-violet-400/20 bg-violet-400/10 text-violet-100";
 }

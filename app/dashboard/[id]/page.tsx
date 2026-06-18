@@ -4,6 +4,7 @@ import { CopySummaryButton } from "@/components/copy-summary-button";
 import { DeleteTimelineButton } from "@/components/delete-timeline-button";
 import { PremiumButton } from "@/components/premium-button";
 import { SiteFooter } from "@/components/site-footer";
+import { TimelineProgressEditor } from "@/components/timeline-progress-editor";
 import { calculateProjection } from "@/lib/chrono-engine";
 import { calculateChronoScore } from "@/lib/chrono-score";
 import { diagnoseExecution } from "@/lib/diagnosis-engine";
@@ -12,6 +13,8 @@ import {
   analyzeTimelinePressure,
   generateTimelinePhases,
 } from "@/lib/timeline-generator";
+
+type TimelineStatus = "PLANNING" | "ACTIVE" | "PAUSED" | "COMPLETED";
 
 type Timeline = {
   id: string;
@@ -22,6 +25,9 @@ type Timeline = {
   created_at: string;
   updated_at: string;
   last_exported_at: string | null;
+  execution_status: TimelineStatus;
+  progress_percentage: number;
+  last_progress_updated_at: string | null;
 };
 
 type TimelineDetailPageProps = {
@@ -48,7 +54,7 @@ export default async function TimelineDetailPage({
   const { data: timeline, error } = await supabase
     .from("timelines")
     .select(
-      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at"
+      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at, execution_status, progress_percentage, last_progress_updated_at"
     )
     .eq("id", id)
     .single();
@@ -70,19 +76,18 @@ export default async function TimelineDetailPage({
   const phases = generateTimelinePhases(savedTimeline.total_estimated_hours);
   const pressure = analyzeTimelinePressure(phases);
 
-  const createdDate = new Intl.DateTimeFormat("en", {
-    dateStyle: "long",
-  }).format(new Date(savedTimeline.created_at));
-
-  const updatedDate = new Intl.DateTimeFormat("en", {
-    dateStyle: "long",
-  }).format(new Date(savedTimeline.updated_at));
+  const createdDate = formatDate(savedTimeline.created_at);
+  const updatedDate = formatDate(savedTimeline.updated_at);
 
   const lastExportedDate = savedTimeline.last_exported_at
-    ? new Intl.DateTimeFormat("en", {
-        dateStyle: "long",
-      }).format(new Date(savedTimeline.last_exported_at))
+    ? formatDate(savedTimeline.last_exported_at)
     : null;
+
+  const lastProgressUpdatedDate = savedTimeline.last_progress_updated_at
+    ? formatDate(savedTimeline.last_progress_updated_at)
+    : null;
+
+  const progress = clampProgress(savedTimeline.progress_percentage);
 
   const copyableSummary = [
     "ChronoForge Timeline Report",
@@ -91,6 +96,13 @@ export default async function TimelineDetailPage({
     `Created: ${createdDate}`,
     `Last Updated: ${updatedDate}`,
     lastExportedDate ? `Last Exported: ${lastExportedDate}` : null,
+    "",
+    "Execution Progress",
+    `Status: ${getStatusLabel(savedTimeline.execution_status)}`,
+    `Progress: ${progress}%`,
+    lastProgressUpdatedDate
+      ? `Last Progress Update: ${lastProgressUpdatedDate}`
+      : null,
     "",
     "ChronoScore",
     `Score: ${chronoScore.score}/100`,
@@ -164,11 +176,63 @@ export default async function TimelineDetailPage({
           <span className="font-medium text-white">{updatedDate}</span>.
         </p>
 
-        {lastExportedDate ? (
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-emerald-200">
-            Last exported on {lastExportedDate}.
-          </p>
-        ) : null}
+        <div className="mt-8 rounded-3xl border border-amber-400/20 bg-amber-400/10 p-6 shadow-[0_20px_90px_rgba(245,158,11,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-amber-300">
+                Execution Status
+              </p>
+
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+                {getStatusHeading(savedTimeline.execution_status)}
+              </h2>
+
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
+                {getStatusDescription(savedTimeline.execution_status, progress)}
+              </p>
+            </div>
+
+            <div
+              className={`w-fit rounded-full border px-4 py-2 text-sm font-semibold ${getStatusBadgeClass(
+                savedTimeline.execution_status
+              )}`}
+            >
+              {getStatusLabel(savedTimeline.execution_status)}
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-300">Current progress</p>
+                <p className="mt-2 text-5xl font-semibold tracking-tight text-white">
+                  {progress}%
+                </p>
+              </div>
+
+              <p className="max-w-xs text-right text-sm leading-6 text-slate-400">
+                {lastProgressUpdatedDate
+                  ? `Last progress update: ${lastProgressUpdatedDate}`
+                  : "No progress update has been recorded yet."}
+              </p>
+            </div>
+
+            <div className="mt-5 h-3 overflow-hidden rounded-full border border-white/10 bg-black/30">
+              <div
+                className="h-full rounded-full bg-amber-300 transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <TimelineProgressEditor
+            timelineId={savedTimeline.id}
+            initialStatus={savedTimeline.execution_status}
+            initialProgress={progress}
+          />
+        </div>
 
         <div className="mt-10 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -369,4 +433,64 @@ function ReportMetric({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
     </div>
   );
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "long",
+  }).format(new Date(value));
+}
+
+function clampProgress(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function getStatusLabel(status: TimelineStatus) {
+  if (status === "PLANNING") return "Planning";
+  if (status === "ACTIVE") return "Active";
+  if (status === "PAUSED") return "Paused";
+  return "Completed";
+}
+
+function getStatusHeading(status: TimelineStatus) {
+  if (status === "PLANNING") return "This plan is being prepared.";
+  if (status === "ACTIVE") return "This plan is currently in motion.";
+  if (status === "PAUSED") return "This plan is intentionally paused.";
+  return "This plan has been completed.";
+}
+
+function getStatusDescription(status: TimelineStatus, progress: number) {
+  if (status === "PLANNING") {
+    return `The architecture is ready, with ${progress}% progress currently recorded.`;
+  }
+
+  if (status === "ACTIVE") {
+    return `Execution is active. ${progress}% of the goal has been completed so far.`;
+  }
+
+  if (status === "PAUSED") {
+    return `Execution is paused at ${progress}%. Resume it when the timing and capacity are right.`;
+  }
+
+  return `Execution has been completed at ${progress}%.`;
+}
+
+function getStatusBadgeClass(status: TimelineStatus) {
+  if (status === "PLANNING") {
+    return "border-slate-400/20 bg-slate-400/10 text-slate-100";
+  }
+
+  if (status === "ACTIVE") {
+    return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
+  }
+
+  if (status === "PAUSED") {
+    return "border-amber-400/20 bg-amber-400/10 text-amber-100";
+  }
+
+  return "border-violet-400/20 bg-violet-400/10 text-violet-100";
 }

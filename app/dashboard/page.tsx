@@ -7,17 +7,7 @@ import { TimelineVaultFilter } from "@/components/timeline-vault-filter";
 import { createClient } from "@/lib/supabase/server";
 import { analyzeVaultIntelligence } from "@/lib/vault-intelligence";
 import { analyzeVaultQuickInsights } from "@/lib/vault-quick-insights";
-
-type Timeline = {
-  id: string;
-  goal_title: string;
-  total_estimated_hours: number;
-  available_hours_per_week: number;
-  days_until_deadline: number;
-  created_at: string;
-  updated_at: string;
-  last_exported_at: string | null;
-};
+import type { Timeline } from "@/lib/timeline-types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -33,7 +23,7 @@ export default async function DashboardPage() {
   const { data: timelines, error } = await supabase
     .from("timelines")
     .select(
-      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at"
+      "id, goal_title, total_estimated_hours, available_hours_per_week, days_until_deadline, created_at, updated_at, last_exported_at, execution_status, progress_percentage, last_progress_updated_at"
     )
     .order("created_at", { ascending: false });
 
@@ -69,23 +59,7 @@ export default async function DashboardPage() {
           saved timelines are stored securely with your account.
         </p>
 
-        <div className="mt-8 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-5 shadow-[0_20px_90px_rgba(16,185,129,0.08)] backdrop-blur-xl">
-          <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">
-            Active Session
-          </p>
-
-          <h2 className="mt-3 text-2xl font-semibold text-white">
-            You are signed in securely.
-          </h2>
-
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-            Your private timeline vault is linked to{" "}
-            <span className="font-medium text-white">{user.email}</span>. Only
-            this account can access its saved goal architectures.
-          </p>
-        </div>
-
-        <div className="mt-8 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
+        <section className="mt-10 rounded-3xl border border-violet-400/20 bg-violet-400/10 p-6 shadow-[0_20px_90px_rgba(139,92,246,0.08)] backdrop-blur-xl">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-violet-300">
@@ -139,6 +113,7 @@ export default async function DashboardPage() {
                   ? `/dashboard/${vaultIntelligence.strongestPlan.id}`
                   : "/create"
               }
+              accent="violet"
             />
 
             <VaultHighlight
@@ -149,11 +124,94 @@ export default async function DashboardPage() {
                   ? `/dashboard/${vaultIntelligence.weakestPlan.id}`
                   : "/create"
               }
+              accent="violet"
             />
           </div>
-        </div>
+        </section>
 
-        <div className="mt-8 rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-6 shadow-[0_20px_90px_rgba(34,211,238,0.08)] backdrop-blur-xl">
+        <section className="mt-8 rounded-3xl border border-amber-400/20 bg-amber-400/10 p-6 shadow-[0_20px_90px_rgba(245,158,11,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-amber-300">
+                Execution Lens
+              </p>
+
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+                The real state of your work.
+              </h2>
+
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
+                ChronoForge now separates plans that are being designed, actively
+                moving, paused, and completed—so your vault reflects reality,
+                not only intention.
+              </p>
+            </div>
+
+            <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-amber-100">
+              {vaultIntelligence.averageProgress}% Avg Progress
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <VaultMetric
+              label="Planning"
+              value={`${vaultIntelligence.planningPlans}`}
+            />
+
+            <VaultMetric
+              label="Active"
+              value={`${vaultIntelligence.activePlans}`}
+            />
+
+            <VaultMetric
+              label="Paused"
+              value={`${vaultIntelligence.pausedPlans}`}
+            />
+
+            <VaultMetric
+              label="Completed"
+              value={`${vaultIntelligence.completedPlans}`}
+            />
+
+            <VaultMetric
+              label="Remaining Work"
+              value={`${vaultIntelligence.totalRemainingHours}h`}
+            />
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <VaultHighlight
+              label="Most At-Risk Active Plan"
+              title={
+                vaultIntelligence.mostAtRiskActivePlan?.goal_title ??
+                "No active plan needs attention yet"
+              }
+              href={
+                vaultIntelligence.mostAtRiskActivePlan
+                  ? `/dashboard/${vaultIntelligence.mostAtRiskActivePlan.id}`
+                  : "/create"
+              }
+              accent="amber"
+            />
+
+            <VaultHighlight
+              label="Execution Guidance"
+              title={
+                vaultIntelligence.activePlans > 0
+                  ? "Protect your active capacity before adding more commitments."
+                  : "Activate the timeline that deserves your next focused block."
+              }
+              href={
+                vaultIntelligence.mostAtRiskActivePlan
+                  ? `/dashboard/${vaultIntelligence.mostAtRiskActivePlan.id}`
+                  : "/create"
+              }
+              accent="amber"
+            />
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-6 shadow-[0_20px_90px_rgba(34,211,238,0.08)] backdrop-blur-xl">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
@@ -165,8 +223,8 @@ export default async function DashboardPage() {
               </h2>
 
               <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-                ChronoForge highlights the most important execution signals
-                inside your saved timeline vault.
+                ChronoForge highlights the strongest, most urgent, and most
+                meaningful execution signals inside your timeline vault.
               </p>
             </div>
 
@@ -175,7 +233,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <QuickInsightCard
               label="Most Urgent"
               timeline={quickInsights.mostUrgent}
@@ -199,10 +257,22 @@ export default async function DashboardPage() {
               timeline={quickInsights.bestRecoveryBuffer}
               fallback="No recovery buffer yet"
             />
-          </div>
-        </div>
 
-        <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <QuickInsightCard
+              label="Most Advanced Active"
+              timeline={quickInsights.mostAdvancedActive}
+              fallback="No active plan in progress"
+            />
+
+            <QuickInsightCard
+              label="Paused Plan to Resume"
+              timeline={quickInsights.pausedPlanToResume}
+              fallback="No paused plan needs review"
+            />
+          </div>
+        </section>
+
+        <section className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
@@ -254,7 +324,7 @@ export default async function DashboardPage() {
               <TimelineVaultFilter timelines={savedTimelines} />
             </div>
           )}
-        </div>
+        </section>
       </section>
 
       <div className="relative z-10">
@@ -306,11 +376,16 @@ function VaultHighlight({
   label,
   title,
   href,
+  accent,
 }: {
   label: string;
   title: string;
   href: string;
+  accent: "violet" | "amber";
 }) {
+  const accentText =
+    accent === "amber" ? "text-amber-200" : "text-violet-200";
+
   return (
     <a
       href={href}
@@ -322,7 +397,7 @@ function VaultHighlight({
 
       <h3 className="mt-3 text-xl font-semibold text-white">{title}</h3>
 
-      <p className="mt-3 text-sm text-violet-200">Open report →</p>
+      <p className={`mt-3 text-sm ${accentText}`}>Open report →</p>
     </a>
   );
 }

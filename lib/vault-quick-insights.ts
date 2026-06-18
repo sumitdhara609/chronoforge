@@ -1,55 +1,27 @@
 import { calculateProjection } from "@/lib/chrono-engine";
 import { calculateChronoScore } from "@/lib/chrono-score";
-
-export type QuickInsightTimeline = {
-  id: string;
-  goal_title: string;
-  total_estimated_hours: number;
-  available_hours_per_week: number;
-  days_until_deadline: number;
-  created_at: string;
-  updated_at: string;
-  last_exported_at: string | null;
-};
+import { diagnoseExecution } from "@/lib/diagnosis-engine";
+import type { Timeline } from "@/lib/timeline-types";
 
 export type VaultQuickInsights = {
-  mostUrgent: QuickInsightTimeline | null;
-  strongest: QuickInsightTimeline | null;
-  highestWeeklyLoad: QuickInsightTimeline | null;
-  bestRecoveryBuffer: QuickInsightTimeline | null;
+  mostUrgent: Timeline | null;
+  strongest: Timeline | null;
+  highestWeeklyLoad: Timeline | null;
+  bestRecoveryBuffer: Timeline | null;
+  mostAdvancedActive: Timeline | null;
+  pausedPlanToResume: Timeline | null;
 };
 
-function getUrgencyScore(timeline: QuickInsightTimeline) {
-  const projection = calculateProjection({
-    totalEstimatedHours: timeline.total_estimated_hours,
-    availableHoursPerWeek: timeline.available_hours_per_week,
-    daysUntilDeadline: timeline.days_until_deadline,
-  });
-
-  const riskWeight =
-    projection.deadlineRisk === "HIGH"
-      ? 300
-      : projection.deadlineRisk === "MEDIUM"
-        ? 150
-        : 50;
-
-  const burnoutWeight =
-    projection.burnoutRisk === "HIGH"
-      ? 120
-      : projection.burnoutRisk === "MEDIUM"
-        ? 60
-        : 0;
-
-  const bufferPenalty =
-    projection.recoveryBufferDays === 0
-      ? 80
-      : Math.max(0, 30 - projection.recoveryBufferDays);
-
-  return riskWeight + burnoutWeight + bufferPenalty;
-}
+type AnalyzedTimeline = {
+  timeline: Timeline;
+  chronoScore: number;
+  requiredWeeklyHours: number;
+  recoveryBufferDays: number;
+  urgencyScore: number;
+};
 
 export function analyzeVaultQuickInsights(
-  timelines: QuickInsightTimeline[]
+  timelines: Timeline[]
 ): VaultQuickInsights {
   if (timelines.length === 0) {
     return {
@@ -57,52 +29,163 @@ export function analyzeVaultQuickInsights(
       strongest: null,
       highestWeeklyLoad: null,
       bestRecoveryBuffer: null,
+      mostAdvancedActive: null,
+      pausedPlanToResume: null,
     };
   }
 
-  const analyzed = timelines.map((timeline) => {
-    const projection = calculateProjection({
-      totalEstimatedHours: timeline.total_estimated_hours,
-      availableHoursPerWeek: timeline.available_hours_per_week,
-      daysUntilDeadline: timeline.days_until_deadline,
-    });
+  const analyzedTimelines = timelines.map(analyzeTimeline);
 
-    const chronoScore = calculateChronoScore(projection);
+  const unfinishedTimelines = analyzedTimelines.filter(
+    (item) => item.timeline.execution_status !== "COMPLETED"
+  );
 
-    return {
-      timeline,
-      projection,
-      chronoScore,
-      urgencyScore: getUrgencyScore(timeline),
-    };
+  const activeTimelines = analyzedTimelines.filter(
+    (item) => item.timeline.execution_status === "ACTIVE"
+  );
+
+  const pausedTimelines = analyzedTimelines.filter(
+    (item) => item.timeline.execution_status === "PAUSED"
+  );
+
+  const actionableTimelines =
+    unfinishedTimelines.length > 0 ? unfinishedTimelines : analyzedTimelines;
+
+  return {
+    mostUrgent: getHighestUrgency(actionableTimelines),
+    strongest: getHighestChronoScore(analyzedTimelines),
+    highestWeeklyLoad: getHighestWeeklyLoad(actionableTimelines),
+    bestRecoveryBuffer: getBestRecoveryBuffer(actionableTimelines),
+    mostAdvancedActive: getMostAdvancedActive(activeTimelines),
+    pausedPlanToResume: getHighestUrgency(pausedTimelines),
+  };
+}
+
+function analyzeTimeline(timeline: Timeline): AnalyzedTimeline {
+  const projection = calculateProjection({
+    totalEstimatedHours: timeline.total_estimated_hours,
+    availableHoursPerWeek: timeline.available_hours_per_week,
+    daysUntilDeadline: timeline.days_until_deadline,
   });
 
-  const mostUrgent = analyzed.reduce((highest, current) =>
+  const chronoScore = calculateChronoScore(projection);
+  const diagnosis = diagnoseExecution(projection);
+
+  return {
+    timeline,
+    chronoScore: chronoScore.score,
+    requiredWeeklyHours: projection.requiredWeeklyHours,
+    recoveryBufferDays: projection.recoveryBufferDays,
+    urgencyScore: getUrgencyScore(
+      timeline.execution_status,
+      timeline.progress_percentage,
+      projection.deadlineRisk,
+      diagnosis.severity
+    ),
+  };
+}
+
+function getUrgencyScore(
+  status: Timeline["execution_status"],
+  progress: number,
+  deadlineRisk: "LOW" | "MEDIUM" | "HIGH",
+  diagnosisSeverity: "STABLE" | "WATCH" | "CRITICAL"
+) {
+  const statusWeight =
+    status === "ACTIVE"
+      ? 80
+      : status === "PAUSED"
+        ? 65
+        : status === "PLANNING"
+          ? 25
+          : -500;
+
+  const riskWeight =
+    deadlineRisk === "HIGH"
+      ? 180
+      : deadlineRisk === "MEDIUM"
+        ? 90
+        : 25;
+
+  const diagnosisWeight =
+    diagnosisSeverity === "CRITICAL"
+      ? 130
+      : diagnosisSeverity === "WATCH"
+        ? 55
+        : 0;
+
+  const progressRelief = clampProgress(progress) * 0.7;
+
+  return statusWeight + riskWeight + diagnosisWeight - progressRelief;
+}
+
+function getHighestUrgency(timelines: AnalyzedTimeline[]): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((highest, current) =>
     current.urgencyScore > highest.urgencyScore ? current : highest
   ).timeline;
+}
 
-  const strongest = analyzed.reduce((best, current) =>
-    current.chronoScore.score > best.chronoScore.score ? current : best
+function getHighestChronoScore(
+  timelines: AnalyzedTimeline[]
+): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((best, current) =>
+    current.chronoScore > best.chronoScore ? current : best
   ).timeline;
+}
 
-  const highestWeeklyLoad = analyzed.reduce((highest, current) =>
-    current.projection.requiredWeeklyHours >
-    highest.projection.requiredWeeklyHours
+function getHighestWeeklyLoad(
+  timelines: AnalyzedTimeline[]
+): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((highest, current) =>
+    current.requiredWeeklyHours > highest.requiredWeeklyHours
       ? current
       : highest
   ).timeline;
+}
 
-  const bestRecoveryBuffer = analyzed.reduce((best, current) =>
-    current.projection.recoveryBufferDays >
-    best.projection.recoveryBufferDays
-      ? current
-      : best
+function getBestRecoveryBuffer(
+  timelines: AnalyzedTimeline[]
+): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((best, current) =>
+    current.recoveryBufferDays > best.recoveryBufferDays ? current : best
   ).timeline;
+}
 
-  return {
-    mostUrgent,
-    strongest,
-    highestWeeklyLoad,
-    bestRecoveryBuffer,
-  };
+function getMostAdvancedActive(
+  timelines: AnalyzedTimeline[]
+): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((mostAdvanced, current) =>
+    clampProgress(current.timeline.progress_percentage) >
+    clampProgress(mostAdvanced.timeline.progress_percentage)
+      ? current
+      : mostAdvanced
+  ).timeline;
+}
+
+function clampProgress(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
