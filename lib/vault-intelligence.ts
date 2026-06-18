@@ -1,136 +1,320 @@
 import { calculateProjection } from "@/lib/chrono-engine";
 import { calculateChronoScore } from "@/lib/chrono-score";
-
-export type VaultTimeline = {
-  id: string;
-  goal_title: string;
-  total_estimated_hours: number;
-  available_hours_per_week: number;
-  days_until_deadline: number;
-  created_at: string;
-};
+import { diagnoseExecution } from "@/lib/diagnosis-engine";
+import type { Timeline } from "@/lib/timeline-types";
 
 export type VaultIntelligence = {
   totalPlans: number;
   totalPlannedHours: number;
+  totalRemainingHours: number;
   averageChronoScore: number;
+  averageProgress: number;
   highRiskPlans: number;
   criticalPlans: number;
-  strongestPlan: VaultTimeline | null;
-  weakestPlan: VaultTimeline | null;
+  planningPlans: number;
+  activePlans: number;
+  pausedPlans: number;
+  completedPlans: number;
+  strongestPlan: Timeline | null;
+  weakestPlan: Timeline | null;
+  mostAtRiskActivePlan: Timeline | null;
   vaultHealthLabel: string;
   vaultSummary: string;
 };
 
-function getVaultHealthLabel(averageScore: number) {
-  if (averageScore >= 85) return "Excellent Planning Health";
-  if (averageScore >= 70) return "Strong Planning Health";
-  if (averageScore >= 50) return "Fragile Planning Health";
-  return "High-Risk Planning Vault";
-}
-
-function getVaultSummary(
-  totalPlans: number,
-  averageScore: number,
-  highRiskPlans: number
-) {
-  if (totalPlans === 0) {
-    return "Your vault is waiting for its first saved goal architecture.";
-  }
-
-  if (averageScore >= 85) {
-    return "Your saved plans show strong alignment between effort, deadlines, and execution capacity.";
-  }
-
-  if (averageScore >= 70) {
-    return "Your vault is generally healthy, but some plans may still need protection against drift.";
-  }
-
-  if (highRiskPlans > 0) {
-    return "Your vault contains plans with meaningful execution risk. Review the weakest timelines before committing serious effort.";
-  }
-
-  return "Your vault shows moderate planning pressure. Improving recovery buffer and scope realism can strengthen it.";
-}
+type AnalyzedTimeline = {
+  timeline: Timeline;
+  chronoScore: number;
+  deadlineRisk: "LOW" | "MEDIUM" | "HIGH";
+  diagnosisSeverity: "STABLE" | "WATCH" | "CRITICAL";
+  urgencyScore: number;
+};
 
 export function analyzeVaultIntelligence(
-  timelines: VaultTimeline[]
+  timelines: Timeline[]
 ): VaultIntelligence {
   if (timelines.length === 0) {
     return {
       totalPlans: 0,
       totalPlannedHours: 0,
+      totalRemainingHours: 0,
       averageChronoScore: 0,
+      averageProgress: 0,
       highRiskPlans: 0,
       criticalPlans: 0,
+      planningPlans: 0,
+      activePlans: 0,
+      pausedPlans: 0,
+      completedPlans: 0,
       strongestPlan: null,
       weakestPlan: null,
-      vaultHealthLabel: "Empty Vault",
-      vaultSummary: "Your vault is waiting for its first saved goal architecture.",
+      mostAtRiskActivePlan: null,
+      vaultHealthLabel: "Vault Ready",
+      vaultSummary:
+        "Your private vault is ready. Create a timeline to begin building execution intelligence.",
     };
   }
 
-  const analyzedTimelines = timelines.map((timeline) => {
-    const projection = calculateProjection({
-      totalEstimatedHours: timeline.total_estimated_hours,
-      availableHoursPerWeek: timeline.available_hours_per_week,
-      daysUntilDeadline: timeline.days_until_deadline,
-    });
+  const analyzedTimelines = timelines.map(analyzeTimeline);
 
-    const chronoScore = calculateChronoScore(projection);
+  const actionableTimelines = analyzedTimelines.filter(
+    (item) => item.timeline.execution_status !== "COMPLETED"
+  );
 
-    return {
-      timeline,
-      projection,
-      chronoScore,
-    };
-  });
+  const activeTimelines = analyzedTimelines.filter(
+    (item) => item.timeline.execution_status === "ACTIVE"
+  );
 
   const totalPlannedHours = timelines.reduce(
     (total, timeline) => total + timeline.total_estimated_hours,
     0
   );
 
-  const totalScore = analyzedTimelines.reduce(
-    (total, item) => total + item.chronoScore.score,
-    0
+  const totalRemainingHours = Math.round(
+    timelines.reduce((total, timeline) => {
+      const progress = clampProgress(timeline.progress_percentage);
+      const remainingPercentage = 1 - progress / 100;
+
+      return total + timeline.total_estimated_hours * remainingPercentage;
+    }, 0)
   );
 
-  const averageChronoScore = Math.round(totalScore / timelines.length);
+  const averageChronoScore = Math.round(
+    analyzedTimelines.reduce((total, item) => total + item.chronoScore, 0) /
+      analyzedTimelines.length
+  );
 
-  const highRiskPlans = analyzedTimelines.filter(
-    (item) => item.projection.deadlineRisk === "HIGH"
+  const averageProgress = Math.round(
+    timelines.reduce(
+      (total, timeline) => total + clampProgress(timeline.progress_percentage),
+      0
+    ) / timelines.length
+  );
+
+  const highRiskPlans = actionableTimelines.filter(
+    (item) => item.deadlineRisk === "HIGH"
   ).length;
 
-  const criticalPlans = analyzedTimelines.filter(
-    (item) =>
-      item.projection.deadlineRisk === "HIGH" ||
-      item.projection.burnoutRisk === "HIGH"
+  const criticalPlans = actionableTimelines.filter(
+    (item) => item.diagnosisSeverity === "CRITICAL"
   ).length;
 
-  const strongestPlan =
-    analyzedTimelines.reduce((best, current) =>
-      current.chronoScore.score > best.chronoScore.score ? current : best
-    ).timeline ?? null;
+  const planningPlans = timelines.filter(
+    (timeline) => timeline.execution_status === "PLANNING"
+  ).length;
 
-  const weakestPlan =
-    analyzedTimelines.reduce((weakest, current) =>
-      current.chronoScore.score < weakest.chronoScore.score ? current : weakest
-    ).timeline ?? null;
+  const activePlans = timelines.filter(
+    (timeline) => timeline.execution_status === "ACTIVE"
+  ).length;
+
+  const pausedPlans = timelines.filter(
+    (timeline) => timeline.execution_status === "PAUSED"
+  ).length;
+
+  const completedPlans = timelines.filter(
+    (timeline) => timeline.execution_status === "COMPLETED"
+  ).length;
+
+  const strongestPlan = getHighestScorePlan(analyzedTimelines);
+
+  const weakestPlan = getLowestScorePlan(
+    actionableTimelines.length > 0 ? actionableTimelines : analyzedTimelines
+  );
+
+  const mostAtRiskActivePlan = getMostUrgentPlan(
+    activeTimelines.length > 0 ? activeTimelines : actionableTimelines
+  );
+
+  const { vaultHealthLabel, vaultSummary } = getVaultHealth({
+    totalPlans: timelines.length,
+    activePlans,
+    pausedPlans,
+    completedPlans,
+    highRiskPlans,
+    criticalPlans,
+    averageProgress,
+  });
 
   return {
     totalPlans: timelines.length,
     totalPlannedHours,
+    totalRemainingHours,
     averageChronoScore,
+    averageProgress,
     highRiskPlans,
     criticalPlans,
+    planningPlans,
+    activePlans,
+    pausedPlans,
+    completedPlans,
     strongestPlan,
     weakestPlan,
-    vaultHealthLabel: getVaultHealthLabel(averageChronoScore),
-    vaultSummary: getVaultSummary(
-      timelines.length,
-      averageChronoScore,
-      highRiskPlans
+    mostAtRiskActivePlan,
+    vaultHealthLabel,
+    vaultSummary,
+  };
+}
+
+function analyzeTimeline(timeline: Timeline): AnalyzedTimeline {
+  const projection = calculateProjection({
+    totalEstimatedHours: timeline.total_estimated_hours,
+    availableHoursPerWeek: timeline.available_hours_per_week,
+    daysUntilDeadline: timeline.days_until_deadline,
+  });
+
+  const chronoScore = calculateChronoScore(projection);
+  const diagnosis = diagnoseExecution(projection);
+
+  return {
+    timeline,
+    chronoScore: chronoScore.score,
+    deadlineRisk: projection.deadlineRisk,
+    diagnosisSeverity: diagnosis.severity,
+    urgencyScore: getUrgencyScore(
+      timeline.execution_status,
+      timeline.progress_percentage,
+      projection.deadlineRisk,
+      diagnosis.severity
     ),
   };
+}
+
+function getUrgencyScore(
+  status: Timeline["execution_status"],
+  progress: number,
+  deadlineRisk: "LOW" | "MEDIUM" | "HIGH",
+  diagnosisSeverity: "STABLE" | "WATCH" | "CRITICAL"
+) {
+  const statusWeight =
+    status === "ACTIVE"
+      ? 80
+      : status === "PAUSED"
+        ? 65
+        : status === "PLANNING"
+          ? 25
+          : -500;
+
+  const riskWeight =
+    deadlineRisk === "HIGH"
+      ? 180
+      : deadlineRisk === "MEDIUM"
+        ? 90
+        : 25;
+
+  const diagnosisWeight =
+    diagnosisSeverity === "CRITICAL"
+      ? 130
+      : diagnosisSeverity === "WATCH"
+        ? 55
+        : 0;
+
+  const progressRelief = clampProgress(progress) * 0.7;
+
+  return statusWeight + riskWeight + diagnosisWeight - progressRelief;
+}
+
+function getHighestScorePlan(
+  timelines: AnalyzedTimeline[]
+): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((best, current) =>
+    current.chronoScore > best.chronoScore ? current : best
+  ).timeline;
+}
+
+function getLowestScorePlan(timelines: AnalyzedTimeline[]): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((lowest, current) =>
+    current.chronoScore < lowest.chronoScore ? current : lowest
+  ).timeline;
+}
+
+function getMostUrgentPlan(timelines: AnalyzedTimeline[]): Timeline | null {
+  if (timelines.length === 0) {
+    return null;
+  }
+
+  return timelines.reduce((highest, current) =>
+    current.urgencyScore > highest.urgencyScore ? current : highest
+  ).timeline;
+}
+
+function getVaultHealth({
+  totalPlans,
+  activePlans,
+  pausedPlans,
+  completedPlans,
+  highRiskPlans,
+  criticalPlans,
+  averageProgress,
+}: {
+  totalPlans: number;
+  activePlans: number;
+  pausedPlans: number;
+  completedPlans: number;
+  highRiskPlans: number;
+  criticalPlans: number;
+  averageProgress: number;
+}) {
+  if (completedPlans === totalPlans) {
+    return {
+      vaultHealthLabel: "Execution Complete",
+      vaultSummary:
+        "Every timeline in this vault is marked completed. Your current execution cycle has been successfully closed.",
+    };
+  }
+
+  if (criticalPlans > 0) {
+    return {
+      vaultHealthLabel: "Immediate Intervention Required",
+      vaultSummary:
+        "One or more unfinished timelines have critical execution pressure. Review the highest-risk active plan before adding more workload.",
+    };
+  }
+
+  if (highRiskPlans > 0) {
+    return {
+      vaultHealthLabel: "High-Pressure Vault",
+      vaultSummary:
+        "Your vault contains unfinished high-risk timelines. Protect capacity, reduce scope where needed, and focus on the most urgent plan first.",
+    };
+  }
+
+  if (pausedPlans > activePlans && pausedPlans > 0) {
+    return {
+      vaultHealthLabel: "Execution Momentum Paused",
+      vaultSummary:
+        "More plans are paused than active. Consider resuming one meaningful timeline before creating additional commitments.",
+    };
+  }
+
+  if (activePlans > 0) {
+    return {
+      vaultHealthLabel: "Execution In Motion",
+      vaultSummary:
+        `You have ${activePlans} active ${
+          activePlans === 1 ? "plan" : "plans"
+        } in progress, with an average completion level of ${averageProgress}%.`,
+    };
+  }
+
+  return {
+    vaultHealthLabel: "Planning Architecture Ready",
+    vaultSummary:
+      "Your timelines are structured and ready. Activate the plan that deserves your next block of focused execution.",
+  };
+}
+
+function clampProgress(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
