@@ -20,35 +20,152 @@ type Timeline = {
 
 type RiskFilter = "ALL" | "LOW" | "MEDIUM" | "HIGH";
 
+type SortMode =
+  | "NEWEST"
+  | "OLDEST"
+  | "HIGHEST_SCORE"
+  | "LOWEST_SCORE"
+  | "HIGHEST_RISK";
+
 type TimelineVaultFilterProps = {
   timelines: Timeline[];
 };
 
 const FILTERS: RiskFilter[] = ["ALL", "LOW", "MEDIUM", "HIGH"];
 
+const SORT_OPTIONS: {
+  label: string;
+  value: SortMode;
+}[] = [
+  { label: "Newest First", value: "NEWEST" },
+  { label: "Oldest First", value: "OLDEST" },
+  { label: "Highest ChronoScore", value: "HIGHEST_SCORE" },
+  { label: "Lowest ChronoScore", value: "LOWEST_SCORE" },
+  { label: "Highest Risk First", value: "HIGHEST_RISK" },
+];
+
 export function TimelineVaultFilter({ timelines }: TimelineVaultFilterProps) {
   const [activeFilter, setActiveFilter] = useState<RiskFilter>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("NEWEST");
 
   const filteredTimelines = useMemo(() => {
-    if (activeFilter === "ALL") {
-      return timelines;
-    }
+    const normalizedSearch = searchQuery.trim().toLowerCase();
 
-    return timelines.filter((timeline) => {
+    const analyzed = timelines.map((timeline) => {
       const projection = calculateProjection({
         totalEstimatedHours: timeline.total_estimated_hours,
         availableHoursPerWeek: timeline.available_hours_per_week,
         daysUntilDeadline: timeline.days_until_deadline,
       });
 
-      return projection.deadlineRisk === activeFilter;
+      const chronoScore = calculateChronoScore(projection);
+
+      return {
+        timeline,
+        projection,
+        chronoScore,
+      };
     });
-  }, [activeFilter, timelines]);
+
+    return analyzed
+      .filter((item) => {
+        const matchesRisk =
+          activeFilter === "ALL" ||
+          item.projection.deadlineRisk === activeFilter;
+
+        const matchesSearch =
+          !normalizedSearch ||
+          item.timeline.goal_title.toLowerCase().includes(normalizedSearch);
+
+        return matchesRisk && matchesSearch;
+      })
+      .sort((first, second) => {
+        if (sortMode === "NEWEST") {
+          return (
+            new Date(second.timeline.created_at).getTime() -
+            new Date(first.timeline.created_at).getTime()
+          );
+        }
+
+        if (sortMode === "OLDEST") {
+          return (
+            new Date(first.timeline.created_at).getTime() -
+            new Date(second.timeline.created_at).getTime()
+          );
+        }
+
+        if (sortMode === "HIGHEST_SCORE") {
+          return second.chronoScore.score - first.chronoScore.score;
+        }
+
+        if (sortMode === "LOWEST_SCORE") {
+          return first.chronoScore.score - second.chronoScore.score;
+        }
+
+        return (
+          getRiskWeight(second.projection.deadlineRisk) -
+          getRiskWeight(first.projection.deadlineRisk)
+        );
+      })
+      .map((item) => item.timeline);
+  }, [activeFilter, searchQuery, sortMode, timelines]);
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex flex-wrap gap-2">
+      <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
+        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+              Vault Controls
+            </p>
+
+            <h3 className="mt-3 text-2xl font-semibold text-white">
+              Search, filter, and sort your timelines.
+            </h3>
+          </div>
+
+          <p className="text-sm text-slate-400">
+            Showing{" "}
+            <span className="font-semibold text-white">
+              {filteredTimelines.length}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-white">{timelines.length}</span>{" "}
+            timelines
+          </p>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_260px]">
+          <label className="block">
+            <span className="text-sm text-slate-400">Search Timeline</span>
+
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search by goal title..."
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-slate-400"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm text-slate-400">Sort By</span>
+
+            <select
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value as SortMode)}
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-slate-400"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
           {FILTERS.map((filter) => (
             <button
               key={filter}
@@ -64,25 +181,15 @@ export function TimelineVaultFilter({ timelines }: TimelineVaultFilterProps) {
             </button>
           ))}
         </div>
-
-        <p className="text-sm text-slate-400">
-          Showing{" "}
-          <span className="font-semibold text-white">
-            {filteredTimelines.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-white">{timelines.length}</span>{" "}
-          timelines
-        </p>
       </div>
 
       {filteredTimelines.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-6">
-          <h3 className="text-2xl font-semibold">No timelines in this filter.</h3>
+          <h3 className="text-2xl font-semibold">No timelines found.</h3>
 
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
-            Try switching to another risk category or create a new timeline with
-            a different execution structure.
+            Try changing the search text, switching the risk filter, or using a
+            different sort mode.
           </p>
         </div>
       ) : (
@@ -169,7 +276,11 @@ function TimelineCard({ timeline }: { timeline: Timeline }) {
             {chronoScore.score}/100
           </div>
 
-          <div className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${getRiskBadgeClass(projection.deadlineRisk)}`}>
+          <div
+            className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${getRiskBadgeClass(
+              projection.deadlineRisk
+            )}`}
+          >
             {projection.deadlineRisk} Risk
           </div>
         </div>
@@ -288,6 +399,12 @@ function getFilterLabel(filter: RiskFilter) {
   if (filter === "LOW") return "Low Risk";
   if (filter === "MEDIUM") return "Medium Risk";
   return "High Risk";
+}
+
+function getRiskWeight(risk: "LOW" | "MEDIUM" | "HIGH") {
+  if (risk === "HIGH") return 3;
+  if (risk === "MEDIUM") return 2;
+  return 1;
 }
 
 function getRiskBadgeClass(risk: "LOW" | "MEDIUM" | "HIGH") {
