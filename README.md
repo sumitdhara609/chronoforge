@@ -19,9 +19,7 @@
 
 <p align="center">
   <a href="https://chronoforge.vercel.app/"><strong>🚀 Open Live Demo</strong></a>
-  ·
-  <a href="https://github.com/sumitdhara609/chronoforge"><strong>View Repository</strong></a>
-</p>
+
 
 
 <p align="center">
@@ -31,6 +29,7 @@
 # Turn Ambition Into Architecture.
 
 ChronoForge is a live, premium full-stack execution-intelligence platform built to help people **plan serious goals, simulate deadline pressure, detect burnout risk, track real progress, compare execution paths, and export structured timeline reports**. 
+
 🌐 **Live Demo:** [Open ChronoForge](https://chronoforge.vercel.app/)
 
 It is not a to-do list.
