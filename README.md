@@ -7,13 +7,31 @@
 ![Vitest](https://img.shields.io/badge/Tests-20%20Passing-6E9F18?style=for-the-badge\&logo=vitest\&logoColor=white)
 ![Built By Sumit](https://img.shields.io/badge/Built%20By-Sumit%20Dhara-gold?style=for-the-badge)
 
+
+<p align="center">
+  <a href="https://chronoforge.vercel.app/">
+    <img src="https://img.shields.io/badge/Live%20Demo-Open%20ChronoForge-00C853?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  </a>
+  <a href="https://github.com/sumitdhara609/chronoforge">
+    <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://chronoforge.vercel.app/"><strong>🚀 Open Live Demo</strong></a>
+  ·
+  <a href="https://github.com/sumitdhara609/chronoforge"><strong>View Repository</strong></a>
+</p>
+
+
 <p align="center">
   <img src="public/readme/screenshots/01-landing-hero.png" alt="ChronoForge Landing Hero" />
 </p>
 
 # Turn Ambition Into Architecture.
 
-ChronoForge is a premium full-stack execution-intelligence platform built to help people **plan serious goals, simulate deadline pressure, detect burnout risk, track real progress, compare execution paths, and export structured timeline reports**.
+ChronoForge is a live, premium full-stack execution-intelligence platform built to help people **plan serious goals, simulate deadline pressure, detect burnout risk, track real progress, compare execution paths, and export structured timeline reports**. 
+🌐 **Live Demo:** [Open ChronoForge](https://chronoforge.vercel.app/)
 
 It is not a to-do list.
 It is not a habit tracker.
