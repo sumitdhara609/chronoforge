@@ -2,6 +2,11 @@ import { spawnSync } from "node:child_process";
 
 const commands = [
   {
+    label: "Running lint checks",
+    command: "npm",
+    args: ["run", "lint"],
+  },
+  {
     label: "Running unit tests",
     command: "npm",
     args: ["test"],
@@ -22,7 +27,7 @@ for (const step of commands) {
   });
 
   if (result.status !== 0) {
-    console.error(`\n✕ Preflight failed during: ${step.label}`);
+    console.error(`\n✕ ChronoForge preflight failed during: ${step.label}`);
     process.exit(result.status ?? 1);
   }
 }

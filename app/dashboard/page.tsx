@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthNavigation } from "@/components/auth-navigation";
 import { BackgroundOrbs } from "@/components/background-orbs";
@@ -141,9 +142,9 @@ export default async function DashboardPage() {
               </h2>
 
               <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-                ChronoForge now separates plans that are being designed, actively
-                moving, paused, and completed—so your vault reflects reality,
-                not only intention.
+                ChronoForge now separates plans that are being designed,
+                actively moving, paused, and completed—so your vault reflects
+                reality, not only intention.
               </p>
             </div>
 
@@ -285,12 +286,12 @@ export default async function DashboardPage() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <a
+              <Link
                 href="/dashboard/compare"
                 className="rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-center text-sm font-semibold text-violet-100 transition hover:-translate-y-0.5 hover:bg-violet-400/15"
               >
                 Compare Timelines
-              </a>
+              </Link>
 
               <div className="w-fit rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
                 {savedTimelines.length} saved
@@ -344,7 +345,7 @@ function QuickInsightCard({
   fallback: string;
 }) {
   return (
-    <a
+    <Link
       href={timeline ? `/dashboard/${timeline.id}` : "/create"}
       className="rounded-2xl border border-white/10 bg-black/20 p-5 transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-black/30"
     >
@@ -359,7 +360,7 @@ function QuickInsightCard({
       <p className="mt-3 text-sm text-cyan-200">
         {timeline ? "Open report →" : "Create timeline →"}
       </p>
-    </a>
+    </Link>
   );
 }
 
@@ -387,7 +388,7 @@ function VaultHighlight({
     accent === "amber" ? "text-amber-200" : "text-violet-200";
 
   return (
-    <a
+    <Link
       href={href}
       className="rounded-2xl border border-white/10 bg-black/20 p-5 transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-black/30"
     >
@@ -398,6 +399,6 @@ function VaultHighlight({
       <h3 className="mt-3 text-xl font-semibold text-white">{title}</h3>
 
       <p className={`mt-3 text-sm ${accentText}`}>Open report →</p>
-    </a>
+    </Link>
   );
 }

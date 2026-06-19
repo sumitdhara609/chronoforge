@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AuthNavigation } from "@/components/auth-navigation";
 import { BackgroundOrbs } from "@/components/background-orbs";
 import { HoverInsight } from "@/components/hover-insight";
@@ -12,12 +13,12 @@ export default function Home() {
 
       <header className="fixed left-0 right-0 top-0 z-50 px-5 py-5 sm:px-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/25 px-4 py-3 shadow-[0_20px_80px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-          <a
+          <Link
             href="/"
             className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-300 transition hover:text-white"
           >
             ChronoForge
-          </a>
+          </Link>
 
           <AuthNavigation />
         </div>
@@ -72,10 +73,14 @@ export default function Home() {
             Login to Save
           </PremiumButton>
         </div>
+
+        <div className="mt-4 flex justify-center">
+          <PremiumButton href="/demo" variant="ghost">
+            View Public Demo
+          </PremiumButton>
+        </div>
       </section>
-<PremiumButton href="/demo" variant="ghost">
-  View Public Demo
-</PremiumButton>
+
       <div className="relative z-10 pb-16">
         <ProductIdentityStrip />
       </div>

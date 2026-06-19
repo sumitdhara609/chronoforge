@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -55,12 +56,12 @@ export function AuthNavigation() {
   if (isChecking) {
     return (
       <nav className="flex items-center gap-2 sm:gap-3">
-        <a
+        <Link
           href="/create"
           className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white sm:inline-flex"
         >
           Create
-        </a>
+        </Link>
 
         <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-400">
           Checking...
@@ -72,38 +73,38 @@ export function AuthNavigation() {
   if (!userEmail) {
     return (
       <nav className="flex items-center gap-2 sm:gap-3">
-        <a
+        <Link
           href="/create"
           className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white sm:inline-flex"
         >
           Create
-        </a>
+        </Link>
 
-        <a
+        <Link
           href="/login"
           className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_0_30px_rgba(255,255,255,0.16)] transition hover:-translate-y-0.5 hover:bg-slate-200 hover:shadow-[0_0_45px_rgba(255,255,255,0.24)]"
         >
           Login
-        </a>
+        </Link>
       </nav>
     );
   }
 
   return (
     <nav className="flex items-center gap-2 sm:gap-3">
-      <a
+      <Link
         href="/create"
         className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white sm:inline-flex"
       >
         Create
-      </a>
+      </Link>
 
-      <a
+      <Link
         href="/dashboard"
         className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-200 transition hover:bg-emerald-400/15"
       >
         Dashboard
-      </a>
+      </Link>
 
       <div className="hidden max-w-[220px] truncate rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 lg:block">
         Signed in as{" "}
