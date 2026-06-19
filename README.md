@@ -325,32 +325,40 @@ ChronoForge could compare two serious projects and generate a verdict.
 
 ---
 
-## Week 12 — Export, Testing, CI, and Polish
+## Week 12 — GitHub Launch, Export, Testing, CI, and Final Polish
 
-The final phase focused on reliability and presentation.
+The final week was the public-shipping phase.
+
+Until this stage, ChronoForge had been built, redesigned, tested, and refined locally through continuous private development. In the 12th week, the project began moving into its public form through GitHub commits, repository organization, documentation, screenshots, quality checks, and launch preparation.
+
+This week focused on turning ChronoForge from a working product into a presentable open-source project.
 
 Major additions:
 
-* export-ready timeline reports,
-* print workflow,
-* export tracking,
-* loading states,
-* error states,
-* custom 404 page,
-* unit tests,
-* preflight quality gate,
-* GitHub Actions CI,
-* README visual system,
-* screenshot documentation.
+* GitHub repository publishing started,
+* project files were organized for public presentation,
+* README documentation was redesigned,
+* screenshot library was created,
+* export-ready timeline reports were finalized,
+* print workflow was polished,
+* export tracking was added,
+* loading states were refined,
+* error states were improved,
+* custom 404 page was added,
+* unit tests were completed,
+* preflight quality gate was created,
+* GitHub Actions CI was added,
+* final product polish was completed.
 
 <p align="center">
   <img src="public/readme/screenshots/19-export-report.png" alt="ChronoForge Export Report" />
 </p>
 
-ChronoForge became a complete, presentable product.
+ChronoForge became more than a local build.
+It became a documented, tested, publicly shareable product.
 
-> ChronoForge was not built quickly.
-> It was forged through 680 hours of planning, debugging, redesigning, testing, and refinement.
+> ChronoForge was not pushed to GitHub on day one.
+> It was first forged through private development, then prepared for public release in the 12th week.
 
 ---
 
