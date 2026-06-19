@@ -3,27 +3,24 @@ import { spawnSync } from "node:child_process";
 const commands = [
   {
     label: "Running lint checks",
-    command: "npm",
-    args: ["run", "lint"],
+    command: "npm run lint",
   },
   {
     label: "Running unit tests",
-    command: "npm",
-    args: ["test"],
+    command: "npm run test",
   },
   {
     label: "Running production build",
-    command: "npm",
-    args: ["run", "build"],
+    command: "npm run build",
   },
 ];
 
 for (const step of commands) {
   console.log(`\n▶ ${step.label}\n`);
 
-  const result = spawnSync(step.command, step.args, {
+  const result = spawnSync(step.command, {
     stdio: "inherit",
-    shell: process.platform === "win32",
+    shell: true,
   });
 
   if (result.status !== 0) {
